@@ -175,7 +175,7 @@ if uploaded_file is not None:
     options = list(unique_dispositions)
 
     # Streamlit multiselect for selecting dispositions
-    selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=['PTP NEW', 'PTP OLD', 'PTP FF UP', 'RPC', 'PAYMENT'])
+    selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=[])
 
     # Create a bar chart
     fig2 = go.Figure()
