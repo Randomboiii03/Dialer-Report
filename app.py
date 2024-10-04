@@ -4,23 +4,31 @@ import plotly.express as px
 import plotly.graph_objects as go
 import plotly.colors
 import io
+import msoffcrypto
+import google.generativeai as genai
 
 st.set_page_config(layout="wide")
 st.title('Call Analytics Dashboard')
 
-# File uploader
-uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
+genai.configure(api_key=st.secrets("API_KEY"))
+
+uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
 
 if uploaded_file is not None:
-    # Read the CSV file
-    df = pd.read_csv(uploaded_file)
+    decrypted = io.BytesIO()
     
-    # Sidebar for campaign selection
+    encrypted = msoffcrypto.OfficeFile(uploaded_file)
+    encrypted.load_key(password=st.secrets("PASSWORD"))
+    encrypted.decrypt(decrypted)
+    
+    decrypted.seek(0)
+
+    df = pd.read_excel(decrypted)
+    
     campaigns = df['Campaign Name'].unique()
     selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
     
-    # Filter data for selected campaign
     campaign_data = df[df['Campaign Name'] == selected_campaign]
     st.subheader(f'Campaign - {selected_campaign}')
     total_unique_accounts = campaign_data['Account'].nunique()
@@ -37,7 +45,7 @@ if uploaded_file is not None:
 
     col1, col2, col3 = st.columns(3)
     col2.metric("Penetration Rate", f"{penetration_rate:.0%}")
-    col3.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")  # Rounded to nearest percent
+    col3.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -94,7 +102,6 @@ if uploaded_file is not None:
                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
         st.plotly_chart(fig3)
 
-    # Disposition Distribution
     col1, col2 = st.columns([2, 1])
     with col1:
         manual_auto_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].groupby(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).size().reset_index(name='Connected Calls')
@@ -131,11 +138,10 @@ if uploaded_file is not None:
 
         st.plotly_chart(fig_manual_auto)
 
-    # Call Type Distribution
     with col2:
         call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
         total_calls = call_type_dist.sum()
-        call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int)  # Round to nearest percent
+        call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int) 
 
         fig4 = px.pie(
             values=call_type_dist.values,
@@ -148,43 +154,32 @@ if uploaded_file is not None:
             textposition='inside',
             textinfo='percent+label',
             hoverinfo='label+percent+value',
-            texttemplate='%{label}<br>%{percent:.0%}'  # Display as rounded percentage
+            texttemplate='%{label}<br>%{percent:.0%}'
         )
 
         st.plotly_chart(fig4)
     
-    # Replace 'OTHERS' with 'SYSTEM DISPOSITION' in DISPOSITION_2
     campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
 
-    # Group by username and DISPOSITION_2, then count unique accounts
     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
 
-    # Calculate the total unique accounts dialed per username
     total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
 
-    # Merge total accounts with disposition counts
     disposition_counts = disposition_counts.merge(total_counts, on='username')
 
-    # Calculate the percentage for each disposition
     disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
 
-    # Get unique dispositions for the selection
     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
 
-    # Add "Total Dialed" to the options
     options = list(unique_dispositions)
 
-    # Streamlit multiselect for selecting dispositions
     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=[])
 
-    # Create a bar chart
     fig2 = go.Figure()
     colors = plotly.colors.qualitative.Vivid
 
-    # Check if any dispositions are selected
     if selected_dispos:
         for i, dispo in enumerate(selected_dispos):
-            # Get the subset of disposition counts
 
             color = colors[i % len(colors)]
             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
@@ -198,8 +193,6 @@ if uploaded_file is not None:
                 textposition='outside'
             ))
                 
-
-    # Update layout for the chart
     fig2.update_layout(
         title='Disposition Distribution per Agent (Unique Accounts)',
         xaxis_title='Number of Unique Accounts',
@@ -252,4 +245,4 @@ if uploaded_file is not None:
     # st.write(response.text)
 
 else:
-    st.write("Please upload a CSV file to begin the analysis.")
+    st.write("Please upload a XLSX file to begin the analysis.")
