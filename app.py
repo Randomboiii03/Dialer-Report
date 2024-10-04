@@ -7,7 +7,7 @@ import io
 import msoffcrypto
 import google.generativeai as genai
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="", layout="wide")
 st.title('Call Analytics Dashboard')
 
 genai.configure(api_key=st.secrets["API_KEY"])
@@ -19,7 +19,7 @@ def load_and_decrypt_file(uploaded_file):
     decrypted = io.BytesIO()
     
     encrypted = msoffcrypto.OfficeFile(uploaded_file)
-    encrypted.load_key(password=st.secrets["PASSWORD"])
+    encrypted.load_key(password=st.secrets['PASSWORD'])
     encrypted.decrypt(decrypted)
     
     decrypted.seek(0)
@@ -28,7 +28,7 @@ def load_and_decrypt_file(uploaded_file):
 if uploaded_file is not None:
     df = load_and_decrypt_file(uploaded_file)
     
-    campaigns = df['Campaign Name'].unique()
+    campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
     selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
     
@@ -107,13 +107,36 @@ if uploaded_file is not None:
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        manual_auto_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].groupby(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).size().reset_index(name='Connected Calls')
-        manual_auto_connected_pivot = manual_auto_connected.pivot(index='Hour of call_originate_time', 
-                                                            columns='CALL TYPE(Auto/Manual)', 
-                                                            values='Connected Calls').reset_index()
-        manual_auto_connected_pivot = manual_auto_connected_pivot.rename(columns={'Auto': 'Auto Dial', 'Manual': 'Manual Dial'})
-        manual_auto_connected_pivot = all_hours.merge(manual_auto_connected_pivot, on='Hour of call_originate_time', how='left').fillna(0)
+        # Group by and count connected calls
+        manual_auto_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].groupby(
+            ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']
+        ).size().reset_index(name='Connected Calls')
 
+        # Pivot the data
+        manual_auto_connected_pivot = manual_auto_connected.pivot(
+            index='Hour of call_originate_time', 
+            columns='CALL TYPE(Auto/Manual)', 
+            values='Connected Calls'
+        ).reset_index()
+
+        # Rename the columns
+        manual_auto_connected_pivot = manual_auto_connected_pivot.rename(columns={'Auto': 'Auto Dial', 'Manual': 'Manual Dial'})
+
+        # Merge with all_hours and fill NaN with 0
+        manual_auto_connected_pivot = all_hours.merge(
+            manual_auto_connected_pivot,
+            on='Hour of call_originate_time',
+            how='left'
+        ).fillna(0)
+
+        # Ensure both 'Auto Dial' and 'Manual Dial' columns exist
+        if 'Auto Dial' not in manual_auto_connected_pivot:
+            manual_auto_connected_pivot['Auto Dial'] = 0
+
+        if 'Manual Dial' not in manual_auto_connected_pivot:
+            manual_auto_connected_pivot['Manual Dial'] = 0
+
+        # Create the plot
         fig_manual_auto = go.Figure()
 
         for call_type in ['Manual Dial', 'Auto Dial']:
@@ -144,8 +167,9 @@ if uploaded_file is not None:
     with col2:
         call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
         total_calls = call_type_dist.sum()
-        call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int) 
+        call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int)
 
+        # Create pie chart for call type distribution
         fig4 = px.pie(
             values=call_type_dist.values,
             names=call_type_dist.index,
@@ -161,6 +185,7 @@ if uploaded_file is not None:
         )
 
         st.plotly_chart(fig4)
+
     
     campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
 
@@ -175,15 +200,15 @@ if uploaded_file is not None:
     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
 
     options = list(unique_dispositions)
+    default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
 
-    selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=[])
+    selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
 
     fig2 = go.Figure()
     colors = plotly.colors.qualitative.Vivid
 
     if selected_dispos:
         for i, dispo in enumerate(selected_dispos):
-
             color = colors[i % len(colors)]
             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
             fig2.add_trace(go.Bar(
@@ -201,12 +226,42 @@ if uploaded_file is not None:
         xaxis_title='Number of Unique Accounts',
         yaxis_title='Agents',
         barmode='stack', 
-        height=max(500, len(disposition_counts['username'].unique()) * 30),
+        height=max(500, len(disposition_counts['username'].unique()) * 50),
         width=10000
     )
 
     st.plotly_chart(fig2)
 
+    connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
+    connected_calls['Talk Time in Seconds'] = connected_calls['End Time in Seconds'] - connected_calls['Start Time in Seconds']
+
+    avg_talk_time = connected_calls.groupby('username')['Talk Time in Seconds'].mean().reset_index()
+    avg_talk_time['Minutes'] = (avg_talk_time['Talk Time in Seconds'] // 60).astype(int)
+    avg_talk_time['Seconds'] = (avg_talk_time['Talk Time in Seconds'] % 60).astype(int)
+    avg_talk_time['Formatted Talk Time'] = avg_talk_time['Minutes'].astype(str) + ' min ' + avg_talk_time['Seconds'].astype(str) + ' sec'
+
+    fig_talk_time = px.bar(
+        avg_talk_time,
+        y='username',
+        x='Talk Time in Seconds',  # This uses raw seconds for the bar height
+        title='Average Connected Talk Time per Agent',
+        orientation='h',
+        labels={'Talk Time in Seconds': 'Average Talk Time (in Seconds)', 'username': 'Agent'},
+        text='Formatted Talk Time'  # This will display the formatted text
+    )
+
+    fig_talk_time.update_traces(texttemplate='%{text}', textposition='outside')
+    fig_talk_time.update_layout(
+        yaxis_title='Agent',
+        xaxis_title='Average Talk Time (Seconds)',
+        xaxis_tickangle=-45,
+        height=max(500, len(avg_talk_time) * 50),
+        margin=dict(t=100)
+    )
+
+    st.write()
+
+    st.plotly_chart(fig_talk_time)
 
     generation_config = {
         "temperature": 1,
