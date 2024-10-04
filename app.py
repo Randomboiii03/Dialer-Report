@@ -14,7 +14,8 @@ genai.configure(api_key=st.secrets["API_KEY"])
 
 uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
 
-if uploaded_file is not None:
+@st.cache_data
+def load_and_decrypt_file(uploaded_file):
     decrypted = io.BytesIO()
     
     encrypted = msoffcrypto.OfficeFile(uploaded_file)
@@ -22,8 +23,10 @@ if uploaded_file is not None:
     encrypted.decrypt(decrypted)
     
     decrypted.seek(0)
+    return pd.read_excel(decrypted)
 
-    df = pd.read_excel(decrypted)
+if uploaded_file is not None:
+    df = load_and_decrypt_file(uploaded_file)
     
     campaigns = df['Campaign Name'].unique()
     selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
