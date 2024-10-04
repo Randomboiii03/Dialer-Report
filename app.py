@@ -10,7 +10,7 @@ import google.generativeai as genai
 st.set_page_config(layout="wide")
 st.title('Call Analytics Dashboard')
 
-genai.configure(api_key=st.secrets("API_KEY"))
+genai.configure(api_key=st.secrets["API_KEY"])
 
 uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
 
@@ -18,7 +18,7 @@ if uploaded_file is not None:
     decrypted = io.BytesIO()
     
     encrypted = msoffcrypto.OfficeFile(uploaded_file)
-    encrypted.load_key(password=st.secrets("PASSWORD"))
+    encrypted.load_key(password=st.secrets["PASSWORD"])
     encrypted.decrypt(decrypted)
     
     decrypted.seek(0)
