@@ -310,12 +310,13 @@ def main():
         unique_dates = pd.Series(df['Date'].unique()).sort_values().tolist()  # Assuming 'Date' is the new column
         selected_date = st.sidebar.selectbox('Select Date', df['Date'])
 
-        # Update campaign_data filtering to include the selected date
         campaign_data = df[
             (df['Campaign Name'] == selected_campaign) &
-            # (df['Day of call_originate_time'].str.contains(selected_day_number)) &
             (df['Date'] == selected_date)  # Filter by the selected date
         ]
+
+        # Ensure that Day of call_originate_time is filtered to include all hours for the selected date
+        campaign_data['Day of call_originate_time'] = campaign_data['Day of call_originate_time'].astype(str)
 
         st.subheader(f'Campaign - {selected_campaign}')
 
