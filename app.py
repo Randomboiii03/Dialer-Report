@@ -297,7 +297,7 @@ def main():
         # days = pd.Series(df['Day of call_originate_time'].unique()).sort_values().tolist()
         # days = [f"{day} {current_month}" for day in days]
 
-        # selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
+        selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
         # selected_date = st.sidebar.selectbox('Select Date', sorted(unique_dates)) 
         # selected_day = st.sidebar.selectbox('Select Day', days)
 
