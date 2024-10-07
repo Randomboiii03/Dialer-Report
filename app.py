@@ -287,7 +287,10 @@ def main():
     if uploaded_file is not None:
         df = load_and_decrypt_file(uploaded_file)
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
-
+        df['Date'] = pd.to_datetime(df['Day of call_originate_time'])  # Ensure the new Date column is in datetime format
+       
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+        unique_dates = df['Date'].unique()  # Get unique dates
         st.write_stream(note())
         
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
@@ -297,6 +300,8 @@ def main():
         days = [f"{day} {current_month}" for day in days]
 
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
+        selected_date = st.sidebar.selectbox('Select Date', sorted(unique_dates)) 
+        selected_day = st.sidebar.selectbox('Select Day', days)
 
         selected_day = st.sidebar.selectbox('Select Day', days)
         selected_day_number = selected_day.split(" ")[0]
