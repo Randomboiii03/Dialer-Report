@@ -306,6 +306,7 @@ def main():
         #     (df['Campaign Name'] == selected_campaign) &
         #     (df['Day of call_originate_time'].str.contains(selected_day_number))
         # ]
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
         unique_dates = pd.Series(df['Date'].unique()).sort_values().tolist()  # Assuming 'Date' is the new column
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
 
