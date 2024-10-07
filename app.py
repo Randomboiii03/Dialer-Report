@@ -286,6 +286,7 @@ def main():
     
     if uploaded_file is not None:
         df = load_and_decrypt_file(uploaded_file)
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.date  # Convert to datetime and extract date
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
         # df['Date'] = pd.to_datetime(df['Day of call_originate_time'])  # Ensure the new Date column is in datetime format
     
