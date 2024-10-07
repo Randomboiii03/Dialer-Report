@@ -308,7 +308,7 @@ def main():
         # ]
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
         unique_dates = pd.Series(df['Date'].unique()).sort_values().tolist()  # Assuming 'Date' is the new column
-        selected_date = st.sidebar.selectbox('Select Date', unique_dates)
+        selected_date = st.sidebar.selectbox('Select Date', df['Date'])
 
         # Update campaign_data filtering to include the selected date
         campaign_data = df[
