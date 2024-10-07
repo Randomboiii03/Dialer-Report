@@ -313,7 +313,7 @@ def main():
         # Update campaign_data filtering to include the selected date
         campaign_data = df[
             (df['Campaign Name'] == selected_campaign) &
-            (df['Day of call_originate_time'].str.contains(selected_day_number)) &
+            # (df['Day of call_originate_time'].str.contains(selected_day_number)) &
             (df['Date'] == selected_date)  # Filter by the selected date
         ]
 
