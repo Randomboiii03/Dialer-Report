@@ -288,26 +288,32 @@ def main():
         df = load_and_decrypt_file(uploaded_file)
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
         df['Date'] = pd.to_datetime(df['Day of call_originate_time'])  # Ensure the new Date column is in datetime format
-       
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        unique_dates = df['Date'].unique()  # Get unique dates
+    
         st.write_stream(note())
         
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
 
-        current_month = datetime.now().strftime('%B %Y')
-        days = pd.Series(df['Day of call_originate_time'].unique()).sort_values().tolist()
-        days = [f"{day} {current_month}" for day in days]
+        # current_month = datetime.now().strftime('%B %Y')
+        # days = pd.Series(df['Day of call_originate_time'].unique()).sort_values().tolist()
+        # days = [f"{day} {current_month}" for day in days]
 
-        selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
-        selected_date = st.sidebar.selectbox('Select Date', sorted(unique_dates)) 
-        selected_day = st.sidebar.selectbox('Select Day', days)
+        # selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
+        # selected_date = st.sidebar.selectbox('Select Date', sorted(unique_dates)) 
+        # selected_day = st.sidebar.selectbox('Select Day', days)
 
-        selected_day = st.sidebar.selectbox('Select Day', days)
-        selected_day_number = selected_day.split(" ")[0]
+        # selected_day_number = selected_day.split(" ")[0]
+        # campaign_data = df[
+        #     (df['Campaign Name'] == selected_campaign) &
+        #     (df['Day of call_originate_time'].str.contains(selected_day_number))
+        # ]
+        unique_dates = pd.Series(df['Date'].unique()).sort_values().tolist()  # Assuming 'Date' is the new column
+        selected_date = st.sidebar.selectbox('Select Date', unique_dates)
+
+        # Update campaign_data filtering to include the selected date
         campaign_data = df[
             (df['Campaign Name'] == selected_campaign) &
-            (df['Day of call_originate_time'].str.contains(selected_day_number))
+            (df['Day of call_originate_time'].str.contains(selected_day_number)) &
+            (df['Date'] == selected_date)  # Filter by the selected date
         ]
 
         st.subheader(f'Campaign - {selected_campaign}')
