@@ -72,6 +72,33 @@ def plot_calls_by_hour(campaign_data):
 
     st.plotly_chart(fig_combined)
 
+def plot_unique_calls_by_hour(campaign_data):
+    all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
+    connected_by_hour = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates().groupby('Hour of call_originate_time').size().reset_index(name='Connected Calls')
+    dialed_by_hour = campaign_data.drop_duplicates().groupby('Hour of call_originate_time').size().reset_index(name='Dialed Calls')
+
+    calls_by_hour = all_hours.merge(connected_by_hour, on='Hour of call_originate_time', how='left').fillna(0)
+    calls_by_hour = calls_by_hour.merge(dialed_by_hour, on='Hour of call_originate_time', how='left').fillna(0)
+
+    fig_combined = px.line(calls_by_hour, 
+                            x='Hour of call_originate_time', 
+                            y=['Connected Calls', 'Dialed Calls'], 
+                            title='Connected and Dialed Calls by Hour',
+                            markers=True,
+                            labels={'value': 'Number of Calls', 'variable': 'Call Type'})
+
+    fig_combined.update_traces(mode='lines+markers+text',
+                                marker=dict(size=8),
+                                texttemplate='%{y:.0f}',
+                                textposition='top center')
+    fig_combined.update_xaxes(range=[6, 20], tickmode='linear', dtick=1)
+    fig_combined.update_layout(xaxis_title="Hour of Day",
+                                yaxis_title="Number of Calls",
+                                legend_title="",
+                                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+
+    st.plotly_chart(fig_combined)
+
 def plot_connection_rate(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
     hourly_stats = campaign_data.groupby('Hour of call_originate_time').agg({
@@ -170,6 +197,23 @@ def plot_call_type_distribution(campaign_data):
 
     st.plotly_chart(fig4)
 
+def display_disposition_metrics(campaign_data):
+    disposition_counts = campaign_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+
+    rpc_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_value = rpc_count[0] if rpc_count.size > 0 else 0
+    
+    ptp_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_value = ptp_count[0] if ptp_count.size > 0 else 0
+
+    payment_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_value = payment_count[0] if payment_count.size > 0 else 0
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("RPC", f"{rpc_value:,}")
+    col2.metric("PTP", f"{ptp_value:,}")
+    col3.metric("PAYMENT", f"{payment_value:,}")
+
 def plot_disposition_distribution(campaign_data):
     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
     total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
@@ -181,6 +225,8 @@ def plot_disposition_distribution(campaign_data):
     default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
 
     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
+
+    display_disposition_metrics(campaign_data)
 
     fig2 = go.Figure()
     colors = plotly.colors.qualitative.Vivid
@@ -288,34 +334,20 @@ def main():
         df = load_and_decrypt_file(uploaded_file)
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d') 
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
-        # df['Date'] = pd.to_datetime(df['Day of call_originate_time'])  # Ensure the new Date column is in datetime format
     
         st.write_stream(note())
         
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
 
-        # current_month = datetime.now().strftime('%B %Y')
-        # days = pd.Series(df['Day of call_originate_time'].unique()).sort_values().tolist()
-        # days = [f"{day} {current_month}" for day in days]
-
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
-        # selected_date = st.sidebar.selectbox('Select Date', sorted(unique_dates)) 
-        # selected_day = st.sidebar.selectbox('Select Day', days)
-
-        # selected_day_number = selected_day.split(" ")[0]
-        # campaign_data = df[
-        #     (df['Campaign Name'] == selected_campaign) &
-        #     (df['Day of call_originate_time'].str.contains(selected_day_number))
-        # ]
         unique_dates = df['Date'].dropna().unique()
         unique_dates = sorted(unique_dates)
     
-        # Sidebar for date selection
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
 
         campaign_data = df[
             (df['Campaign Name'] == selected_campaign) &
-            (df['Date'] == selected_date)  # Filter by the selected date
+            (df['Date'] == selected_date)
         ]
 
         st.subheader(f'Campaign - {selected_campaign}')
@@ -326,7 +358,8 @@ def main():
         with call_cols[0]:
             plot_calls_by_hour(campaign_data)
         with call_cols[1]:
-            plot_connection_rate(campaign_data)
+            # plot_connection_rate(campaign_data)
+            plot_unique_calls_by_hour(campaign_data)
 
         dispo_cols = st.columns([2, 1])
         with dispo_cols[0]:
