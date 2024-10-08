@@ -362,7 +362,7 @@ def plot_average_talk_time(campaign_data):
     avg_talk_time = connected_calls.groupby('username')['Talk Time in Seconds'].mean().reset_index()
     
     # Sort the DataFrame by 'Talk Time in Seconds' in descending order
-    avg_talk_time = avg_talk_time.sort_values(by='Talk Time in Seconds', ascending=False)
+    avg_talk_time = avg_talk_time.sort_values(by='Talk Time in Seconds', ascending=True)
     
     # Convert talk time to minutes and seconds for display
     avg_talk_time['Minutes'] = (avg_talk_time['Talk Time in Seconds'] // 60).astype(int)
