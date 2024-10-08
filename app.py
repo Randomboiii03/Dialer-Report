@@ -451,14 +451,14 @@ def main():
             unique_month = df['Month'].dropna().sort_values().unique()
             selected_month = st.sidebar.selectbox('Select Month', unique_month)
         except:
-            pass
+            selected_month = None
         
         unique_dates = df['Day of call_originate_time'].dropna().sort_values().unique()
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
 
         conditions = (df['Campaign Name'] == selected_campaign) & (df['Day of call_originate_time'] == selected_date)
 
-        if selected_month:
+        if selected_month is not None:
             conditions &= (df['Month'] == selected_month)
         
         campaign_data = df[conditions]
