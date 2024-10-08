@@ -462,34 +462,37 @@ def main():
             conditions &= (df['Month'] == selected_month)
         
         campaign_data = df[conditions]
-        st.dataframe(df)
-        st.subheader(f'Campaign - {selected_campaign}')
 
-        display_metrics(campaign_data)
-        
-        call_cols = st.columns(2)
-        with call_cols[0]:
-            plot_calls_by_hour(campaign_data)
-        with call_cols[1]:
-            # plot_connection_rate(campaign_data)
-            plot_unique_calls_by_hour(campaign_data)
-        plot_connection_rate(campaign_data)
-        dispo_cols = st.columns([2, 1])
-        with dispo_cols[0]:
-            plot_manual_auto(campaign_data)
-        with dispo_cols[1]:
-            plot_call_type_distribution(campaign_data)
-
-        plot_disposition_distribution(campaign_data)
-        plot_average_talk_time(campaign_data)
-
-        total_calls = campaign_data['Account'].count()
-        total_unique_accounts = campaign_data['Account'].nunique()
-        penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
-        total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['Account'].nunique()
-        overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
-
-        generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate)
+        if campaign.empty:
+            st.subheader(f'No Data')
+        else:
+            st.subheader(f'Campaign - {selected_campaign}')
+            
+            display_metrics(campaign_data)
+            
+            call_cols = st.columns(2)
+            with call_cols[0]:
+                plot_calls_by_hour(campaign_data)
+            with call_cols[1]:
+                # plot_connection_rate(campaign_data)
+                plot_unique_calls_by_hour(campaign_data)
+            plot_connection_rate(campaign_data)
+            dispo_cols = st.columns([2, 1])
+            with dispo_cols[0]:
+                plot_manual_auto(campaign_data)
+            with dispo_cols[1]:
+                plot_call_type_distribution(campaign_data)
+    
+            plot_disposition_distribution(campaign_data)
+            plot_average_talk_time(campaign_data)
+    
+            total_calls = campaign_data['Account'].count()
+            total_unique_accounts = campaign_data['Account'].nunique()
+            penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
+            total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['Account'].nunique()
+            overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
+    
+            generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate)
     else:
         st.write("Please upload a XLSX file to begin the analysis.")
 
