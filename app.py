@@ -106,7 +106,7 @@ def plot_connection_rate(campaign_data):
         'Account': 'nunique'
     }).reset_index()
 
-    hourly_stats = all_hours.merge(hourly_stats, on='Hour of call_originate_time', how='left').fillna(0)
+    hourly_stats = all_hours.merge(hourly_stats, on='Hour of call_originate_time', how='left').fillna(0).drop_duplicates()
     hourly_stats['Connection Rate'] = hourly_stats['system_disposition'] / hourly_stats['Account'].replace(0, 1)
 
     fig3 = px.line(hourly_stats, 
