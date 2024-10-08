@@ -445,17 +445,23 @@ def main():
         # st.write_stream(note())
         
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
-
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
+
+        try:
+            unique_month = df['Month'].dropna().sort_values().unique()
+            selected_month = st.sidebar.selectbox('Select Month', unique_month)
+        except:
+            pass
+        
         unique_dates = df['Day of call_originate_time'].dropna().sort_values().unique()
-        # unique_dates = sorted(unique_dates)
-    
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
 
-        campaign_data = df[
-            (df['Campaign Name'] == selected_campaign) &
-            (df['Day of call_originate_time'] == selected_date)
-        ]
+        conditions = (df['Campaign Name'] == selected_campaign) & (df['Day of call_originate_time'] == selected_date)
+
+        if selected_month:
+            conditions &= (df['Month'] == selected_month)
+        
+        campaign_data = df[conditions]
 
         st.subheader(f'Campaign - {selected_campaign}')
 
