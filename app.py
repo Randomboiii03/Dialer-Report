@@ -467,7 +467,7 @@ def main():
         with call_cols[1]:
             # plot_connection_rate(campaign_data)
             plot_unique_calls_by_hour(campaign_data)
-
+        plot_connection_rate(campaign_data)
         dispo_cols = st.columns([2, 1])
         with dispo_cols[0]:
             plot_manual_auto(campaign_data)
