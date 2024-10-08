@@ -463,7 +463,7 @@ def main():
         
         campaign_data = df[conditions]
 
-        if campaign.empty:
+        if campaign_data.empty:
             st.subheader(f'No Data')
         else:
             st.subheader(f'Campaign - {selected_campaign}')
