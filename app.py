@@ -101,7 +101,7 @@ def plot_unique_calls_by_hour(campaign_data):
 
 def plot_connection_rate(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
-    hourly_stats = campaign_data.drop_duplicates().groupby('Hour of call_originate_time').agg({
+    hourly_stats = campaign_data.groupby('Hour of call_originate_time').agg({
         'system_disposition': lambda x: (x == 'CONNECTED').sum(),
         'Account': 'nunique'
     }).reset_index()
@@ -439,7 +439,7 @@ def main():
     
     if uploaded_file is not None:
         df = load_and_decrypt_file(uploaded_file)
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d') 
+        # df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d') 
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
     
         # st.write_stream(note())
@@ -447,14 +447,14 @@ def main():
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
 
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
-        unique_dates = df['Date'].dropna().unique()
+        unique_dates = df['Day of call_originate_time'].dropna().unique()
         unique_dates = sorted(unique_dates)
     
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
 
         campaign_data = df[
             (df['Campaign Name'] == selected_campaign) &
-            (df['Date'] == selected_date)
+            (df['Day of call_originate_time'] == selected_date)
         ]
 
         st.subheader(f'Campaign - {selected_campaign}')
