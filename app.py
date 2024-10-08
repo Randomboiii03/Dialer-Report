@@ -442,7 +442,7 @@ def main():
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d') 
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
     
-        st.write_stream(note())
+        # st.write_stream(note())
         
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
 
