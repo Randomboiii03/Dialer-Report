@@ -439,7 +439,7 @@ def main():
     
     if uploaded_file is not None:
         df = load_and_decrypt_file(uploaded_file)
-        # df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d') 
+        df['Month'] = pd.to_datetime(df['Month'], errors='coerce').dt.strftime('%m-%Y') 
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
     
         # st.write_stream(note())
