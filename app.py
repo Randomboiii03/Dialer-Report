@@ -462,7 +462,7 @@ def main():
             conditions &= (df['Month'] == selected_month)
         
         campaign_data = df[conditions]
-        st.dataframe(campaign_data)
+        st.dataframe(df)
         st.subheader(f'Campaign - {selected_campaign}')
 
         display_metrics(campaign_data)
