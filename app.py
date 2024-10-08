@@ -210,9 +210,9 @@ def display_disposition_metrics(campaign_data):
     payment_value = payment_count[0] if payment_count.size > 0 else 0
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("RPC", f"{rpc_value:,}")
-    col2.metric("PTP", f"{ptp_value:,}")
-    col3.metric("PAYMENT", f"{payment_value:,}")
+    col1.metric("Total No. of RPC", f"{rpc_value:,}")
+    col2.metric("Total No. of PTP", f"{ptp_value:,}")
+    col3.metric("Total No. of PAYMENT", f"{payment_value:,}")
 
 def plot_disposition_distribution(campaign_data):
     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
