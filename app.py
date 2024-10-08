@@ -83,7 +83,7 @@ def plot_unique_calls_by_hour(campaign_data):
     fig_combined = px.line(calls_by_hour, 
                             x='Hour of call_originate_time', 
                             y=['Connected Calls', 'Dialed Calls'], 
-                            title='Connected and Dialed Calls by Hour',
+                            title='Unique Connected and Dialed Calls by Hour',
                             markers=True,
                             labels={'value': 'Number of Calls', 'variable': 'Call Type'})
 
