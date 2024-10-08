@@ -323,14 +323,53 @@ def plot_disposition_distribution(campaign_data):
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig2)
 
+# def plot_average_talk_time(campaign_data):
+#     connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
+#     connected_calls['Talk Time in Seconds'] = connected_calls['End Time in Seconds'] - connected_calls['Start Time in Seconds']
+#     avg_talk_time = connected_calls.groupby('username')['Talk Time in Seconds'].mean().reset_index()
+#     avg_talk_time['Minutes'] = (avg_talk_time['Talk Time in Seconds'] // 60).astype(int)
+#     avg_talk_time['Seconds'] = (avg_talk_time['Talk Time in Seconds'] % 60).astype(int)
+#     avg_talk_time['Formatted Talk Time'] = avg_talk_time['Minutes'].astype(str) + ' min ' + avg_talk_time['Seconds'].astype(str) + ' sec'
+
+#     fig_talk_time = px.bar(
+#         avg_talk_time,
+#         y='username',
+#         x='Talk Time in Seconds',
+#         title='Average Connected Talk Time per Agent',
+#         orientation='h',
+#         labels={'Talk Time in Seconds': 'Average Talk Time (in Seconds)', 'username': 'Agent'},
+#         text='Formatted Talk Time'
+#     )
+
+#     fig_talk_time.update_traces(texttemplate='%{text}', textposition='outside')
+#     fig_talk_time.update_layout(
+#         yaxis_title='Agent',
+#         xaxis_title='Average Talk Time (Seconds)',
+#         xaxis_tickangle=-45,
+#         height=max(500, len(avg_talk_time) * 50),
+#         margin=dict(t=100)
+#     )
+
+#     st.plotly_chart(fig_talk_time)
 def plot_average_talk_time(campaign_data):
+    # Filter connected calls and remove duplicates
     connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
+    
+    # Calculate talk time in seconds
     connected_calls['Talk Time in Seconds'] = connected_calls['End Time in Seconds'] - connected_calls['Start Time in Seconds']
+    
+    # Calculate average talk time per agent
     avg_talk_time = connected_calls.groupby('username')['Talk Time in Seconds'].mean().reset_index()
+    
+    # Sort the DataFrame by 'Talk Time in Seconds' in descending order
+    avg_talk_time = avg_talk_time.sort_values(by='Talk Time in Seconds', ascending=False)
+    
+    # Convert talk time to minutes and seconds for display
     avg_talk_time['Minutes'] = (avg_talk_time['Talk Time in Seconds'] // 60).astype(int)
     avg_talk_time['Seconds'] = (avg_talk_time['Talk Time in Seconds'] % 60).astype(int)
     avg_talk_time['Formatted Talk Time'] = avg_talk_time['Minutes'].astype(str) + ' min ' + avg_talk_time['Seconds'].astype(str) + ' sec'
 
+    # Create a horizontal bar chart
     fig_talk_time = px.bar(
         avg_talk_time,
         y='username',
@@ -341,6 +380,7 @@ def plot_average_talk_time(campaign_data):
         text='Formatted Talk Time'
     )
 
+    # Update text position and layout
     fig_talk_time.update_traces(texttemplate='%{text}', textposition='outside')
     fig_talk_time.update_layout(
         yaxis_title='Agent',
@@ -350,8 +390,8 @@ def plot_average_talk_time(campaign_data):
         margin=dict(t=100)
     )
 
+    # Display the plot in Streamlit
     st.plotly_chart(fig_talk_time)
-
 @st.cache_data
 def generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate):
     generation_config = {
