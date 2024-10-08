@@ -447,7 +447,7 @@ def main():
         campaigns = pd.Series(df['Campaign Name'].unique()).sort_values().tolist()
 
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
-        unique_dates = df['Day of call_originate_time'].dropna().unique().sort_values().to_list()
+        unique_dates = df['Day of call_originate_time'].dropna().sort_values().unique().to_list()
         # unique_dates = sorted(unique_dates)
     
         selected_date = st.sidebar.selectbox('Select Date', unique_dates)
