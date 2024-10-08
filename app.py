@@ -214,23 +214,84 @@ def display_disposition_metrics(campaign_data):
     col2.metric("Total No. of PTP", f"{ptp_value:,}")
     col3.metric("Total No. of PAYMENT", f"{payment_value:,}")
 
-def plot_disposition_distribution(campaign_data):
-    disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
-    total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
-    disposition_counts = disposition_counts.merge(total_counts, on='username')
-    disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
+# def plot_disposition_distribution(campaign_data):
+#     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
+#     total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
+#     disposition_counts = disposition_counts.merge(total_counts, on='username')
+#     disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
 
+#     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
+#     options = list(unique_dispositions)
+#     default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
+
+#     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
+
+#     display_disposition_metrics(campaign_data)
+
+#     fig2 = go.Figure()
+#     colors = plotly.colors.qualitative.Vivid
+
+#     if selected_dispos:
+#         for i, dispo in enumerate(selected_dispos):
+#             color = colors[i % len(colors)]
+#             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
+#             fig2.add_trace(go.Bar(
+#                 y=subset['username'],
+#                 x=subset['Account'],
+#                 name=dispo,
+#                 orientation='h',
+#                 marker=dict(color=color),
+#                 text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['Account'], subset['Percentage'])],
+#                 textposition='outside'
+#             ))
+
+#     fig2.update_layout(
+#         title='Disposition Distribution per Agent (Unique Accounts)',
+#         xaxis_title='Number of Unique Accounts',
+#         yaxis_title='Agents',
+#         barmode='stack', 
+#         height=max(500, len(disposition_counts['username'].unique()) * 50),
+#         width=10000
+#     )
+
+#     st.plotly_chart(fig2)
+
+def plot_disposition_distribution(campaign_data):
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
+    disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
+    
+    # Calculate total unique 'Account's per 'username'
+    total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
+    
+    # Merge the disposition counts with total counts
+    disposition_counts = disposition_counts.merge(total_counts, on='username')
+    
+    # Calculate the percentage of each disposition per user
+    disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
+    
+    # Sort the DataFrame by 'Total_Dialed' in descending order
+    disposition_counts = disposition_counts.sort_values(by='Total_Dialed', ascending=False)
+    
+    # Optional: If you want to sort usernames alphabetically instead, comment out the above line and uncomment below
+    # disposition_counts = disposition_counts.sort_values(by='username')
+    
+    # Get unique dispositions
     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
     options = list(unique_dispositions)
+    
+    # Define default dispositions to display
     default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
-
+    
+    # Multiselect widget for selecting dispositions
     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
-
+    
+    # Display additional metrics (assuming this function is defined elsewhere)
     display_disposition_metrics(campaign_data)
-
+    
+    # Initialize Plotly figure
     fig2 = go.Figure()
     colors = plotly.colors.qualitative.Vivid
-
+    
     if selected_dispos:
         for i, dispo in enumerate(selected_dispos):
             color = colors[i % len(colors)]
@@ -244,16 +305,22 @@ def plot_disposition_distribution(campaign_data):
                 text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['Account'], subset['Percentage'])],
                 textposition='outside'
             ))
-
+    
+    # Update layout with sorted usernames
     fig2.update_layout(
         title='Disposition Distribution per Agent (Unique Accounts)',
         xaxis_title='Number of Unique Accounts',
         yaxis_title='Agents',
         barmode='stack', 
         height=max(500, len(disposition_counts['username'].unique()) * 50),
-        width=10000
+        # Consider adjusting the width to a more reasonable size if needed
+        # width=1000
     )
-
+    
+    # To ensure the y-axis follows the sorted order, set categoryorder
+    fig2.update_yaxes(categoryorder='total ascending')  # 'total ascending' or 'total descending' as needed
+    
+    # Display the Plotly chart in Streamlit
     st.plotly_chart(fig2)
 
 def plot_average_talk_time(campaign_data):
