@@ -653,7 +653,7 @@ def plot_manual_vs_auto_dial(campaign_data):
     separated by Manual Dial and Auto Dial.
     """
     # Define the range of hours
-    hours = range(6, 21)  # 6 AM to 8 PM
+    hours = campaign_data['Hour of call_originate_time'].unique().tolist()  # 6 AM to 8 PM
 
     # Define the unique dispositions
     dispositions = campaign_data['DISPOSITION_2'].unique().tolist()
