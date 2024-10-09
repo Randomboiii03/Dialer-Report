@@ -336,7 +336,8 @@ def plot_disposition_distribution(campaign_data):
     default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
     
     # Multiselect widget for selecting dispositions
-    selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
+    with st.expander("Filter Options", expanded=True):
+        selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
     
     # Display additional metrics (assuming this function is defined elsewhere)
     display_disposition_metrics(campaign_data)
