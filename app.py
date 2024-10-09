@@ -433,59 +433,120 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
     )
     response = model.generate_content(prompt)
     st.write(response.text)
-def plot_agent_disposition_distribution(campaign_data):
+def plot_agent_disposition_manual(campaign_data):
     """
-    Plots the disposition distribution per agent, separated by Call Type (Manual and Auto Dial).
+    Plots the disposition distribution per agent for Manual Dial calls.
     """
-    # Group by 'username', 'CALL TYPE(Auto/Manual)', and 'DISPOSITION_2' to count unique 'Account's
-    disposition_counts = campaign_data.groupby(['username', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
+    # Filter data for Manual Dial
+    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual']
+    
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
+    disposition_counts_manual = manual_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
     
     # Pivot the data to have dispositions as columns
-    disposition_pivot = disposition_counts.pivot_table(
-        index=['username', 'CALL TYPE(Auto/Manual)'],
+    disposition_pivot_manual = disposition_counts_manual.pivot_table(
+        index='username',
         columns='DISPOSITION_2',
         values='Count',
         fill_value=0
     ).reset_index()
     
     # Create a list of dispositions for consistent coloring
-    dispositions = campaign_data['DISPOSITION_2'].unique().tolist()
+    dispositions = manual_data['DISPOSITION_2'].unique().tolist()
     dispositions.sort()  # Sort dispositions for consistent ordering
-
-    # Create a Plotly figure
-    fig = go.Figure()
 
     # Define colors for different dispositions
     colors = px.colors.qualitative.Vivid
     color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
-
+    
+    # Create a Plotly figure
+    fig_manual = go.Figure()
+    
     # Iterate over each disposition to add a bar for each
     for dispo in dispositions:
-        fig.add_trace(go.Bar(
-            y=disposition_pivot['username'] + ' (' + disposition_pivot['CALL TYPE(Auto/Manual)'] + ')',
-            x=disposition_pivot[dispo],
+        fig_manual.add_trace(go.Bar(
+            y=disposition_pivot_manual['username'],
+            x=disposition_pivot_manual[dispo],
             name=dispo,
             orientation='h',
             marker=dict(color=color_map[dispo]),
             hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>'
         ))
-
+    
     # Update layout for stacked bars
-    fig.update_layout(
+    fig_manual.update_layout(
         barmode='stack',
-        title='Agent Disposition Distribution by Call Type',
+        title='Agent Disposition Distribution - Manual Dial',
         xaxis_title='Number of Unique Accounts',
-        yaxis_title='Agents (Call Type)',
+        yaxis_title='Agents',
         legend_title='Disposition',
-        height=max(600, len(disposition_pivot['username'].unique()) * 30),
+        height=max(400, len(disposition_pivot_manual['username']) * 30),
         margin=dict(l=150, r=50, t=100, b=50)
     )
-
+    
     # Update y-axis to ensure agents are sorted and fully visible
-    fig.update_yaxes(categoryorder='total ascending')
-
+    fig_manual.update_yaxes(categoryorder='total ascending')
+    
     # Display the Plotly chart in Streamlit
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig_manual, use_container_width=True)
+
+def plot_agent_disposition_auto(campaign_data):
+    """
+    Plots the disposition distribution per agent for Auto Dial calls.
+    """
+    # Filter data for Auto Dial
+    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto']
+    
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
+    disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
+    
+    # Pivot the data to have dispositions as columns
+    disposition_pivot_auto = disposition_counts_auto.pivot_table(
+        index='username',
+        columns='DISPOSITION_2',
+        values='Count',
+        fill_value=0
+    ).reset_index()
+    
+    # Create a list of dispositions for consistent coloring
+    dispositions = auto_data['DISPOSITION_2'].unique().tolist()
+    dispositions.sort()  # Sort dispositions for consistent ordering
+
+    # Define colors for different dispositions
+    colors = px.colors.qualitative.Vivid
+    color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
+    
+    # Create a Plotly figure
+    fig_auto = go.Figure()
+    
+    # Iterate over each disposition to add a bar for each
+    for dispo in dispositions:
+        fig_auto.add_trace(go.Bar(
+            y=disposition_pivot_auto['username'],
+            x=disposition_pivot_auto[dispo],
+            name=dispo,
+            orientation='h',
+            marker=dict(color=color_map[dispo]),
+            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>'
+        ))
+    
+    # Update layout for stacked bars
+    fig_auto.update_layout(
+        barmode='stack',
+        title='Agent Disposition Distribution - Auto Dial',
+        xaxis_title='Number of Unique Accounts',
+        yaxis_title='Agents',
+        legend_title='Disposition',
+        height=max(400, len(disposition_pivot_auto['username']) * 30),
+        margin=dict(l=150, r=50, t=100, b=50)
+    )
+    
+    # Update y-axis to ensure agents are sorted and fully visible
+    fig_auto.update_yaxes(categoryorder='total ascending')
+    
+    # Display the Plotly chart in Streamlit
+    st.plotly_chart(fig_auto, use_container_width=True)
+
 
 def main():
     uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
@@ -538,7 +599,11 @@ def main():
     
             plot_disposition_distribution(campaign_data)
             plot_average_talk_time(campaign_data)
-            plot_agent_disposition_distribution(campaign_data)
+            disp_cols = st.columns(2)
+            with disp_cols[0]:
+                plot_agent_disposition_manual(campaign_data)
+            with disp_cols[1]:
+                plot_agent_disposition_auto(campaign_data)
     
             total_calls = campaign_data['Account'].count()
             total_unique_accounts = campaign_data['Account'].nunique()
