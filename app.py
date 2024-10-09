@@ -112,7 +112,7 @@ def plot_connection_rate(campaign_data):
     fig3 = px.line(hourly_stats, 
                     x='Hour of call_originate_time', 
                     y='Connection Rate', 
-                    title='Connection Rate by Hour',
+                    title='Unique Connected Rate per Hour',
                     markers=True,
                     line_shape='linear')
 
