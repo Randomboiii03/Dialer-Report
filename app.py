@@ -30,10 +30,10 @@ def note():
         sleep(0.05)
 
 def display_metrics(campaign_data):
-    total_unique_accounts = campaign_data['Account'].nunique()
-    total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['Account'].nunique()
+    total_unique_accounts = campaign_data['dialled_phone'].nunique()
+    total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
     overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
-    total_calls = campaign_data['Account'].count()
+    total_calls = campaign_data['dialled_phone'].count()
     penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
 
     col1, col2, col3 = st.columns(3)
@@ -103,11 +103,11 @@ def plot_connection_rate(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
     hourly_stats = campaign_data.groupby('Hour of call_originate_time').agg({
         'system_disposition': lambda x: (x == 'CONNECTED').sum(),
-        'Account': 'nunique'
+        'dialled_phone': 'nunique'
     }).reset_index()
 
     hourly_stats = all_hours.merge(hourly_stats, on='Hour of call_originate_time', how='left').fillna(0)
-    hourly_stats['Connection Rate'] = hourly_stats['system_disposition'] / hourly_stats['Account'].replace(0, 1)
+    hourly_stats['Connection Rate'] = hourly_stats['system_disposition'] / hourly_stats['dialled_phone'].replace(0, 1)
 
     fig3 = px.line(hourly_stats, 
                     x='Hour of call_originate_time', 
@@ -198,15 +198,15 @@ def plot_call_type_distribution(campaign_data):
     st.plotly_chart(fig4)
 
 def display_disposition_metrics(campaign_data):
-    disposition_counts = campaign_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+    disposition_counts = campaign_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
 
-    rpc_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
     rpc_value = rpc_count[0] if rpc_count.size > 0 else 0
     
-    ptp_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
     ptp_value = ptp_count[0] if ptp_count.size > 0 else 0
 
-    payment_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_count = disposition_counts.loc[disposition_counts['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
     payment_value = payment_count[0] if payment_count.size > 0 else 0
 
     col1, col2, col3 = st.columns(3)
@@ -220,17 +220,17 @@ def display_disposition_metrics_manual(campaign_data):
     # Filter data for Manual Dial
     manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
     
-    # Group by 'DISPOSITION_2' to count unique 'Account's
-    disposition_counts_manual = manual_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+    # Group by 'DISPOSITION_2' to count unique 'dialled_phone's
+    disposition_counts_manual = manual_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
     
     # Extract counts for specific dispositions
-    rpc_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
     rpc_value_manual = rpc_count_manual[0] if len(rpc_count_manual) > 0 else 0
     
-    ptp_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
     ptp_value_manual = ptp_count_manual[0] if len(ptp_count_manual) > 0 else 0
     
-    payment_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
     payment_value_manual = payment_count_manual[0] if len(payment_count_manual) > 0 else 0
     
     # Display metrics in three columns
@@ -246,17 +246,17 @@ def display_disposition_metrics_auto(campaign_data):
     # Filter data for Auto Dial
     auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
     
-    # Group by 'DISPOSITION_2' to count unique 'Account's
-    disposition_counts_auto = auto_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+    # Group by 'DISPOSITION_2' to count unique 'dialled_phone's
+    disposition_counts_auto = auto_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
     
     # Extract counts for specific dispositions
-    rpc_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
     rpc_value_auto = rpc_count_auto[0] if len(rpc_count_auto) > 0 else 0
     
-    ptp_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
     ptp_value_auto = ptp_count_auto[0] if len(ptp_count_auto) > 0 else 0
     
-    payment_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
     payment_value_auto = payment_count_auto[0] if len(payment_count_auto) > 0 else 0
     
     # Display metrics in three columns
@@ -267,10 +267,10 @@ def display_disposition_metrics_auto(campaign_data):
 
 
 # def plot_disposition_distribution(campaign_data):
-#     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
-#     total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
+#     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
+#     total_counts = campaign_data.groupby('username')['dialled_phone'].nunique().reset_index().rename(columns={'dialled_phone': 'Total_Dialed'})
 #     disposition_counts = disposition_counts.merge(total_counts, on='username')
-#     disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
+#     disposition_counts['Percentage'] = (disposition_counts['dialled_phone'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
 
 #     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
 #     options = list(unique_dispositions)
@@ -289,11 +289,11 @@ def display_disposition_metrics_auto(campaign_data):
 #             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
 #             fig2.add_trace(go.Bar(
 #                 y=subset['username'],
-#                 x=subset['Account'],
+#                 x=subset['dialled_phone'],
 #                 name=dispo,
 #                 orientation='h',
 #                 marker=dict(color=color),
-#                 text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['Account'], subset['Percentage'])],
+#                 text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['dialled_phone'], subset['Percentage'])],
 #                 textposition='outside'
 #             ))
 
@@ -309,18 +309,18 @@ def display_disposition_metrics_auto(campaign_data):
 #     st.plotly_chart(fig2)
 
 def plot_disposition_distribution(campaign_data):
-    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
     campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
-    disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
+    disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
     
-    # Calculate total unique 'Account's per 'username'
-    total_counts = campaign_data.groupby('username')['Account'].nunique().reset_index().rename(columns={'Account': 'Total_Dialed'})
+    # Calculate total unique 'dialled_phone's per 'username'
+    total_counts = campaign_data.groupby('username')['dialled_phone'].nunique().reset_index().rename(columns={'dialled_phone': 'Total_Dialed'})
     
     # Merge the disposition counts with total counts
     disposition_counts = disposition_counts.merge(total_counts, on='username')
     
     # Calculate the percentage of each disposition per user
-    disposition_counts['Percentage'] = (disposition_counts['Account'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
+    disposition_counts['Percentage'] = (disposition_counts['dialled_phone'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
     
     # Sort the DataFrame by 'Total_Dialed' in descending order
     disposition_counts = disposition_counts.sort_values(by='Total_Dialed', ascending=False)
@@ -352,11 +352,11 @@ def plot_disposition_distribution(campaign_data):
             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
             fig2.add_trace(go.Bar(
                 y=subset['username'],
-                x=subset['Account'],
+                x=subset['dialled_phone'],
                 name=dispo,
                 orientation='h',
                 marker=dict(color=color),
-                text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['Account'], subset['Percentage'])],
+                text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['dialled_phone'], subset['Percentage'])],
                 textposition='outside'
             ))
     
@@ -503,8 +503,8 @@ def plot_agent_disposition_manual(campaign_data):
         st.warning("No Manual Dial data available for this campaign.")
         return
     
-    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
-    disposition_counts_manual = manual_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
+    disposition_counts_manual = manual_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index(name='Count')
     
     # Pivot the data to have dispositions as columns
     disposition_pivot_manual = disposition_counts_manual.pivot_table(
@@ -583,8 +583,8 @@ def plot_agent_disposition_auto(campaign_data):
         st.warning("No Auto Dial data available for this campaign.")
         return
     
-    # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
-    disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
+    disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index(name='Count')
     
     # Pivot the data to have dispositions as columns
     disposition_pivot_auto = disposition_counts_auto.pivot_table(
@@ -711,10 +711,10 @@ def main():
 
             
     
-            total_calls = campaign_data['Account'].count()
-            total_unique_accounts = campaign_data['Account'].nunique()
+            total_calls = campaign_data['dialled_phone'].count()
+            total_unique_accounts = campaign_data['dialled_phone'].nunique()
             penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
-            total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['Account'].nunique()
+            total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
             overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
     
             generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate)
