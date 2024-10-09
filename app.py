@@ -655,7 +655,7 @@ def plot_manual_vs_auto_dial(campaign_data):
     hours = range(6, 21)  # 6 AM to 8 PM
 
     # Define the unique dispositions
-    dispositions = campaign_data['system_disposition'].unique().tolist()
+    dispositions = campaign_data['DISPOSITION_2'].unique().tolist()
 
     # Define call types
     call_types = ['Manual Dial', 'Auto Dial']
@@ -668,14 +668,14 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Group the data by Hour, Call Type, and Disposition, and count the number of calls
     grouped = campaign_data.groupby(
-        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'system_disposition']
+        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
     ).size().reset_index(name='Call Count')
 
     # Rename columns for consistency
     grouped = grouped.rename(columns={
         'Hour of call_originate_time': 'Hour',
         'CALL TYPE(Auto/Manual)': 'Call Type',
-        'system_disposition': 'Disposition'
+        'DISPOSITION_2': 'Disposition'
     })
 
     # Merge with all_combinations to ensure all possible combinations are present
