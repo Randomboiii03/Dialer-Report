@@ -533,7 +533,7 @@ def plot_agent_disposition_manual(campaign_data):
         xaxis_title='Number of Unique Accounts',
         yaxis_title='Agents',
         legend_title='Disposition',
-        height=max(400, len(disposition_pivot_manual['username']) * 30),
+        height=max(500, len(disposition_pivot_manual['username']) * 50),
         margin=dict(l=150, r=50, t=100, b=50)
     )
     
@@ -591,7 +591,7 @@ def plot_agent_disposition_auto(campaign_data):
         xaxis_title='Number of Unique Accounts',
         yaxis_title='Agents',
         legend_title='Disposition',
-        height=max(400, len(disposition_pivot_auto['username']) * 30),
+        height=max(500, len(disposition_pivot_auto['username']) * 50),
         margin=dict(l=150, r=50, t=100, b=50)
     )
     
@@ -655,13 +655,14 @@ def main():
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
             
-            tabs = st.tabs(["Manual Dial", "Auto Dial", "All"])
+            tabs = st.tabs(["All", "Manual Dial", "Auto Dial"])
             with tabs[0]:
-                plot_agent_disposition_manual(campaign_data)
-            with tabs[1]:
-                plot_agent_disposition_auto(campaign_data)
-            with tabs[2]:
                 plot_disposition_distribution(campaign_data)
+            with tabs[1]:
+                plot_agent_disposition_manual(campaign_data)
+            with tabs[2]:
+                plot_agent_disposition_auto(campaign_data)
+            
     
             total_calls = campaign_data['Account'].count()
             total_unique_accounts = campaign_data['Account'].nunique()
