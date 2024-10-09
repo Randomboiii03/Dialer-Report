@@ -667,9 +667,6 @@ def plot_manual_vs_auto_dial(campaign_data):
         names=['Hour', 'Call Type', 'Disposition']
     ).to_frame(index=False)
 
-    # Ensure 'Hour of call_originate_time' is in the correct format
-    campaign_data['Hour of call_originate_time'] = pd.to_datetime(campaign_data['Hour of call_originate_time']).dt.hour
-
     # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
     grouped = campaign_data.groupby(
         ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
@@ -682,6 +679,12 @@ def plot_manual_vs_auto_dial(campaign_data):
         'DISPOSITION_2': 'Disposition'
     })
 
+    # Debugging Step 1: Verify the unique values after renaming
+    st.write("### Unique Values After Renaming")
+    st.write("Hours:", grouped['Hour'].unique())
+    st.write("Call Types:", grouped['Call Type'].unique())
+    st.write("Dispositions:", grouped['Disposition'].unique())
+
     # Merge with all_combinations to ensure all possible combinations are present
     merged = all_combinations.merge(
         grouped,
@@ -691,6 +694,15 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Convert Unique Account Count to integer
     merged['Unique Account Count'] = merged['Unique Account Count'].astype(int)
+
+    # Debugging Step 2: Check the specific combination causing issues
+    specific_data = merged[
+        (merged['Hour'] == 6) &
+        (merged['Call Type'] == 'Auto Dial') &
+        (merged['Disposition'] == 'RPC')
+    ]
+    st.write("### Specific Data for 6 AM, Auto Dial, RPC")
+    st.write(specific_data)
 
     # Create a unique identifier for each line (e.g., Manual Dial - CONNECTED)
     merged['Line Label'] = merged['Call Type'] + ' - ' + merged['Disposition']
@@ -732,6 +744,7 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Display the plot in Streamlit
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 
