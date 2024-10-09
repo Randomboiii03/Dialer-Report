@@ -286,7 +286,7 @@ def plot_disposition_distribution(campaign_data):
     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
     
     # Display additional metrics (assuming this function is defined elsewhere)
-    display_disposition_metrics(campaign_data)
+    
     
     # Initialize Plotly figure
     fig2 = go.Figure()
@@ -600,6 +600,7 @@ def main():
             # plot_disposition_distribution(campaign_data)
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
+            display_disposition_metrics(campaign_data)
             tabs = st.tabs(["Manual Dial", "Auto Dial", "All"])
             with tabs[0]:
                 plot_agent_disposition_manual(campaign_data)
