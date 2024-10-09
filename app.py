@@ -760,7 +760,7 @@ def main():
                 plot_agent_disposition_manual(campaign_data)
             with tabs[2]:
                 plot_agent_disposition_auto(campaign_data)
-            with tabs[3]
+            with tabs[3]:
                 plot_manual_vs_auto_dial(campaign_data)
             
     
