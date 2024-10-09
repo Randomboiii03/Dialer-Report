@@ -647,108 +647,6 @@ def plot_agent_disposition_auto(campaign_data):
     st.plotly_chart(fig_auto, use_container_width=True)
 
 
-def plot_manual_vs_auto_dial(campaign_data):
-    """
-    Plots a line graph showing the number of unique accounts per disposition per hour,
-    separated by Manual Dial and Auto Dial.
-    """
-    # Define the range of hours
-    hours = campaign_data['Hour of call_originate_time'].dropna().sort_values().unique().tolist()  # 6 AM to 8 PM
-
-    # Define the unique dispositions
-    dispositions = campaign_data['DISPOSITION_2'].unique().tolist()
-
-    # Define call types
-    call_types = ['Manual Dial', 'Auto Dial']
-
-    # Create a DataFrame with all combinations to ensure completeness
-    all_combinations = pd.MultiIndex.from_product(
-        [hours, call_types, dispositions],
-        names=['Hour', 'Call Type', 'Disposition']
-    ).to_frame(index=False)
-
-    # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
-    grouped = campaign_data.groupby(
-        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2', 'dst_phone']
-    ).nunique().reset_index(name='Unique Account Count')
-
-    # Rename columns for consistency
-    grouped = grouped.rename(columns={
-        'Hour of call_originate_time': 'Hour',
-        'CALL TYPE(Auto/Manual)': 'Call Type',
-        'DISPOSITION_2': 'Disposition',
-        'dst_phone': 'num'
-    })
-
-    # Debugging Step 1: Verify the unique values after renaming
-    st.write("### Unique Values After Renaming")
-    st.write("Hours:", grouped['Hour'].unique())
-    st.write("Call Types:", grouped['Call Type'].unique())
-    st.write("Dispositions:", grouped['Disposition'].unique())
-
-    # Merge with all_combinations to ensure all possible combinations are present
-    merged = all_combinations.merge(
-        grouped,
-        on=['Hour', 'Call Type', 'Disposition', 'num'],
-        how='left'
-    ).fillna(0)
-
-    # Convert Unique Account Count to integer
-    merged['Unique Account Count'] = merged['Unique Account Count'].astype(int)
-
-    # Debugging Step 2: Check the specific combination causing issues
-    specific_data = merged[
-        (merged['Hour'] == 7) &
-        (merged['Call Type'] == 'Auto Dial') &
-        (merged['Disposition'] == 'RPC')
-    ]
-    st.write("### Specific Data for 6 AM, Auto Dial, RPC")
-    st.write(specific_data)
-
-    # Create a unique identifier for each line (e.g., Manual Dial - CONNECTED)
-    merged['Line Label'] = merged['Call Type'] + ' - ' + merged['Disposition']
-
-    # Define a color palette
-    color_palette = px.colors.qualitative.Vivid
-
-    # Create the line graph using Plotly Express
-    fig = px.line(
-        merged,
-        x='Hour',
-        y='Unique Account Count',
-        color='Line Label',
-        markers=True,
-        title='Unique Call Dispositions per Hour by Dial Type',
-        labels={
-            'Hour': 'Hour of Day',
-            'Unique Account Count': 'Number of Unique Accounts',
-            'Line Label': 'Dial Type & Disposition'
-        },
-        color_discrete_sequence=color_palette
-    )
-
-    # Update layout for better aesthetics
-    fig.update_layout(
-        xaxis=dict(tickmode='linear', dtick=1),
-        yaxis=dict(title='Number of Unique Accounts'),
-        legend_title='Dial Type & Disposition',
-        template='plotly_white',
-        hovermode='x unified'
-    )
-
-    # Add annotations for data points
-    fig.update_traces(
-        text=merged['Unique Account Count'],
-        textposition='top center',
-        texttemplate='%{text}'
-    )
-
-    # Display the plot in Streamlit
-    st.plotly_chart(fig, use_container_width=True)
-
-
-
-
 
 def main():
     uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
@@ -803,15 +701,14 @@ def main():
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
             
-            tabs = st.tabs(["All", "Manual Dial", "Auto Dial", "Per/Hr Dispo"])
+            tabs = st.tabs(["All", "Manual Dial", "Auto Dial"])
             with tabs[0]:
                 plot_disposition_distribution(campaign_data)
             with tabs[1]:
                 plot_agent_disposition_manual(campaign_data)
             with tabs[2]:
                 plot_agent_disposition_auto(campaign_data)
-            with tabs[3]:
-                plot_manual_vs_auto_dial(campaign_data)
+
             
     
             total_calls = campaign_data['Account'].count()
