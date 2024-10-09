@@ -646,6 +646,7 @@ def plot_agent_disposition_auto(campaign_data):
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig_auto, use_container_width=True)
 
+
 def plot_manual_vs_auto_dial(campaign_data):
     """
     Plots a line graph showing the number of unique accounts per disposition per hour,
@@ -666,10 +667,13 @@ def plot_manual_vs_auto_dial(campaign_data):
         names=['Hour', 'Call Type', 'Disposition']
     ).to_frame(index=False)
 
+    # Ensure 'Hour of call_originate_time' is in the correct format
+    campaign_data['Hour of call_originate_time'] = pd.to_datetime(campaign_data['Hour of call_originate_time']).dt.hour
+
     # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
     grouped = campaign_data.groupby(
         ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
-    )['Account'].unique().reset_index(name='Unique Account Count')
+    )['Account'].nunique().reset_index(name='Unique Account Count')
 
     # Rename columns for consistency
     grouped = grouped.rename(columns={
