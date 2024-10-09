@@ -438,7 +438,7 @@ def plot_agent_disposition_manual(campaign_data):
     Plots the disposition distribution per agent for Manual Dial calls.
     """
     # Filter data for Manual Dial
-    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual']
+    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
     
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
     disposition_counts_manual = manual_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
@@ -495,7 +495,7 @@ def plot_agent_disposition_auto(campaign_data):
     Plots the disposition distribution per agent for Auto Dial calls.
     """
     # Filter data for Auto Dial
-    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto']
+    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
     
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
     disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
