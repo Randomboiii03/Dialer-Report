@@ -648,56 +648,86 @@ def plot_agent_disposition_auto(campaign_data):
 
 def plot_manual_vs_auto_dial(campaign_data):
     """
-    Plots a line graph comparing Manual Dial and Auto Dial calls per hour based on system disposition.
+    Plots a line graph showing the number of calls per disposition per hour,
+    separated by Manual Dial and Auto Dial.
     """
-    # Filter for connected calls if you want to focus on successful connections
-    # Remove or modify this line if you want to include all dispositions
-    # connected_data = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']
-    
-    # Group data by hour and call type to get counts
-    dial_counts = campaign_data.groupby(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).size().reset_index(name='Call Count')
-    
-    # Ensure all hours are represented for both call types
-    all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
+    # Define the range of hours
+    hours = range(6, 21)  # 6 AM to 8 PM
+
+    # Define the unique dispositions
+    dispositions = campaign_data['system_disposition'].unique().tolist()
+
+    # Define call types
     call_types = ['Manual Dial', 'Auto Dial']
-    complete_index = pd.MultiIndex.from_product([all_hours['Hour of call_originate_time'], call_types], names=['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)'])
-    dial_counts = dial_counts.set_index(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).reindex(complete_index, fill_value=0).reset_index()
-    
+
+    # Create a DataFrame with all combinations to ensure completeness
+    all_combinations = pd.MultiIndex.from_product(
+        [hours, call_types, dispositions],
+        names=['Hour', 'Call Type', 'Disposition']
+    ).to_frame(index=False)
+
+    # Group the data by Hour, Call Type, and Disposition, and count the number of calls
+    grouped = campaign_data.groupby(
+        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'system_disposition']
+    ).size().reset_index(name='Call Count')
+
+    # Rename columns for consistency
+    grouped = grouped.rename(columns={
+        'Hour of call_originate_time': 'Hour',
+        'CALL TYPE(Auto/Manual)': 'Call Type',
+        'system_disposition': 'Disposition'
+    })
+
+    # Merge with all_combinations to ensure all possible combinations are present
+    merged = all_combinations.merge(
+        grouped,
+        on=['Hour', 'Call Type', 'Disposition'],
+        how='left'
+    ).fillna(0)
+
+    # Convert Call Count to integer
+    merged['Call Count'] = merged['Call Count'].astype(int)
+
+    # Create a unique identifier for each line (e.g., Manual Dial - CONNECTED)
+    merged['Line Label'] = merged['Call Type'] + ' - ' + merged['Disposition']
+
+    # Define a color palette
+    color_palette = px.colors.qualitative.Vivid
+
     # Create the line graph using Plotly Express
     fig = px.line(
-        dial_counts,
-        x='Hour of call_originate_time',
+        merged,
+        x='Hour',
         y='Call Count',
-        color='CALL TYPE(Auto/Manual)',
+        color='Line Label',
         markers=True,
-        title='Manual Dial vs Auto Dial Calls per Hour',
+        title='Call Disposition per Hour by Dial Type',
         labels={
-            'Hour of call_originate_time': 'Hour of Day',
+            'Hour': 'Hour of Day',
             'Call Count': 'Number of Calls',
-            'CALL TYPE(Auto/Manual)': 'Call Type'
+            'Line Label': 'Dial Type & Disposition'
         },
-        color_discrete_map={
-            'Manual Dial': 'blue',
-            'Auto Dial': 'orange'
-        }
+        color_discrete_sequence=color_palette
     )
-    
+
     # Update layout for better aesthetics
     fig.update_layout(
         xaxis=dict(tickmode='linear', dtick=1),
         yaxis=dict(title='Number of Calls'),
-        legend_title='Call Type',
-        template='plotly_white'
+        legend_title='Dial Type & Disposition',
+        template='plotly_white',
+        hovermode='x unified'
     )
-    
+
     # Add annotations for data points
     fig.update_traces(
-        text=dial_counts['Call Count'],
+        text=merged['Call Count'],
         textposition='top center'
     )
-    
+
     # Display the plot in Streamlit
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 def main():
