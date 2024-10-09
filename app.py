@@ -648,7 +648,7 @@ def plot_agent_disposition_auto(campaign_data):
 
 def plot_manual_vs_auto_dial(campaign_data):
     """
-    Plots a line graph showing the number of calls per disposition per hour,
+    Plots a line graph showing the number of unique accounts per disposition per hour,
     separated by Manual Dial and Auto Dial.
     """
     # Define the range of hours
@@ -666,10 +666,10 @@ def plot_manual_vs_auto_dial(campaign_data):
         names=['Hour', 'Call Type', 'Disposition']
     ).to_frame(index=False)
 
-    # Group the data by Hour, Call Type, and Disposition, and count the number of calls
+    # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
     grouped = campaign_data.groupby(
         ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
-    ).size().reset_index(name='Call Count')
+    )['Account'].nunique().reset_index(name='Unique Account Count')
 
     # Rename columns for consistency
     grouped = grouped.rename(columns={
@@ -685,8 +685,8 @@ def plot_manual_vs_auto_dial(campaign_data):
         how='left'
     ).fillna(0)
 
-    # Convert Call Count to integer
-    merged['Call Count'] = merged['Call Count'].astype(int)
+    # Convert Unique Account Count to integer
+    merged['Unique Account Count'] = merged['Unique Account Count'].astype(int)
 
     # Create a unique identifier for each line (e.g., Manual Dial - CONNECTED)
     merged['Line Label'] = merged['Call Type'] + ' - ' + merged['Disposition']
@@ -698,13 +698,13 @@ def plot_manual_vs_auto_dial(campaign_data):
     fig = px.line(
         merged,
         x='Hour',
-        y='Call Count',
+        y='Unique Account Count',
         color='Line Label',
         markers=True,
-        title='Call Disposition per Hour by Dial Type',
+        title='Unique Call Dispositions per Hour by Dial Type',
         labels={
             'Hour': 'Hour of Day',
-            'Call Count': 'Number of Calls',
+            'Unique Account Count': 'Number of Unique Accounts',
             'Line Label': 'Dial Type & Disposition'
         },
         color_discrete_sequence=color_palette
@@ -713,7 +713,7 @@ def plot_manual_vs_auto_dial(campaign_data):
     # Update layout for better aesthetics
     fig.update_layout(
         xaxis=dict(tickmode='linear', dtick=1),
-        yaxis=dict(title='Number of Calls'),
+        yaxis=dict(title='Number of Unique Accounts'),
         legend_title='Dial Type & Disposition',
         template='plotly_white',
         hovermode='x unified'
@@ -721,12 +721,14 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Add annotations for data points
     fig.update_traces(
-        text=merged['Call Count'],
-        textposition='top center'
+        text=merged['Unique Account Count'],
+        textposition='top center',
+        texttemplate='%{text}'
     )
 
     # Display the plot in Streamlit
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 
