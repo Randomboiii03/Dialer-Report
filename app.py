@@ -439,7 +439,6 @@ def main():
     
     if uploaded_file is not None:
         df = load_and_decrypt_file(uploaded_file)
-        df['Month'] = pd.to_datetime(df['Month'], errors='coerce').dt.strftime('%m-%Y') 
         df['Day of call_originate_time'] = df['Day of call_originate_time'].astype(str)
     
         # st.write_stream(note())
@@ -448,6 +447,7 @@ def main():
         selected_campaign = st.sidebar.selectbox('Select Campaign', campaigns)
 
         try:
+            df['Month'] = pd.to_datetime(df['Month'], errors='coerce').dt.strftime('%m-%Y') 
             unique_month = df['Month'].dropna().sort_values().unique()
             selected_month = st.sidebar.selectbox('Select Month', unique_month)
         except:
