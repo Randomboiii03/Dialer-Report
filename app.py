@@ -597,14 +597,16 @@ def main():
             with dispo_cols[1]:
                 plot_call_type_distribution(campaign_data)
     
-            plot_disposition_distribution(campaign_data)
+            # plot_disposition_distribution(campaign_data)
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
-            tabs = st.tabs(["Manual Dial", "Auto Dial"])
+            tabs = st.tabs(["Manual Dial", "Auto Dial", "All"])
             with tabs[0]:
                 plot_agent_disposition_manual(campaign_data)
             with tabs[1]:
                 plot_agent_disposition_auto(campaign_data)
+            with tabs[2]:
+                plot_disposition_distribution(campaign_data)
     
             total_calls = campaign_data['Account'].count()
             total_unique_accounts = campaign_data['Account'].nunique()
