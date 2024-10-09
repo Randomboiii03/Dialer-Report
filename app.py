@@ -566,11 +566,18 @@ def plot_agent_disposition_manual(campaign_data):
 
 def plot_agent_disposition_auto(campaign_data):
     """
-    Plots the disposition distribution per agent for Auto Dial calls.
+    Plots the disposition distribution per agent for Auto Dial calls,
+    including percentage labels for each disposition segment.
     """
-    # Filter data for Auto Dial
+    # Display metrics for Auto Dial calls
     display_disposition_metrics_auto(campaign_data)
+    
+    # Filter data for Auto Dial
     auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
+    
+    if auto_data.empty:
+        st.warning("No Auto Dial data available for this campaign.")
+        return
     
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
     disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index(name='Count')
@@ -583,10 +590,18 @@ def plot_agent_disposition_auto(campaign_data):
         fill_value=0
     ).reset_index()
     
+    # Calculate total dispositions per agent for percentage calculation
+    disposition_pivot_auto['Total'] = disposition_pivot_auto[disposition_pivot_auto.columns.difference(['username'])].sum(axis=1)
+    
+    # Calculate percentage for each disposition
+    for dispo in disposition_pivot_auto.columns:
+        if dispo != 'username' and dispo != 'Total':
+            disposition_pivot_auto[f'{dispo}_Percent'] = (disposition_pivot_auto[dispo] / disposition_pivot_auto['Total'] * 100).round(1)
+    
     # Create a list of dispositions for consistent coloring
     dispositions = auto_data['DISPOSITION_2'].unique().tolist()
     dispositions.sort()  # Sort dispositions for consistent ordering
-
+    
     # Define colors for different dispositions
     colors = px.colors.qualitative.Vivid
     color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
@@ -602,7 +617,9 @@ def plot_agent_disposition_auto(campaign_data):
             name=dispo,
             orientation='h',
             marker=dict(color=color_map[dispo]),
-            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>'
+            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>',
+            text=disposition_pivot_auto[f'{dispo}_Percent'].astype(str) + '%',
+            textposition='inside'
         ))
     
     # Update layout for stacked bars
@@ -619,8 +636,12 @@ def plot_agent_disposition_auto(campaign_data):
     # Update y-axis to ensure agents are sorted and fully visible
     fig_auto.update_yaxes(categoryorder='total ascending')
     
+    # Update layout to adjust text styling
+    fig_auto.update_traces(textfont=dict(color='white', size=10))
+    
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig_auto, use_container_width=True)
+
 
 
 def main():
