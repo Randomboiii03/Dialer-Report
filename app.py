@@ -670,7 +670,7 @@ def plot_manual_vs_auto_dial(campaign_data):
     # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
     grouped = campaign_data.groupby(
         ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
-    )['Account'].nunique().reset_index(name='Unique Account Count')
+    )['dst_phone'].nunique().reset_index(name='Unique Account Count')
 
     # Rename columns for consistency
     grouped = grouped.rename(columns={
