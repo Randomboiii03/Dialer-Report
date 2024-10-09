@@ -646,6 +646,58 @@ def plot_agent_disposition_auto(campaign_data):
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig_auto, use_container_width=True)
 
+def plot_manual_vs_auto_dial(campaign_data):
+    """
+    Plots a line graph comparing Manual Dial and Auto Dial calls per hour based on system disposition.
+    """
+    # Filter for connected calls if you want to focus on successful connections
+    # Remove or modify this line if you want to include all dispositions
+    # connected_data = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']
+    
+    # Group data by hour and call type to get counts
+    dial_counts = campaign_data.groupby(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).size().reset_index(name='Call Count')
+    
+    # Ensure all hours are represented for both call types
+    all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
+    call_types = ['Manual Dial', 'Auto Dial']
+    complete_index = pd.MultiIndex.from_product([all_hours['Hour of call_originate_time'], call_types], names=['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)'])
+    dial_counts = dial_counts.set_index(['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)']).reindex(complete_index, fill_value=0).reset_index()
+    
+    # Create the line graph using Plotly Express
+    fig = px.line(
+        dial_counts,
+        x='Hour of call_originate_time',
+        y='Call Count',
+        color='CALL TYPE(Auto/Manual)',
+        markers=True,
+        title='Manual Dial vs Auto Dial Calls per Hour',
+        labels={
+            'Hour of call_originate_time': 'Hour of Day',
+            'Call Count': 'Number of Calls',
+            'CALL TYPE(Auto/Manual)': 'Call Type'
+        },
+        color_discrete_map={
+            'Manual Dial': 'blue',
+            'Auto Dial': 'orange'
+        }
+    )
+    
+    # Update layout for better aesthetics
+    fig.update_layout(
+        xaxis=dict(tickmode='linear', dtick=1),
+        yaxis=dict(title='Number of Calls'),
+        legend_title='Call Type',
+        template='plotly_white'
+    )
+    
+    # Add annotations for data points
+    fig.update_traces(
+        text=dial_counts['Call Count'],
+        textposition='top center'
+    )
+    
+    # Display the plot in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def main():
@@ -701,13 +753,15 @@ def main():
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
             
-            tabs = st.tabs(["All", "Manual Dial", "Auto Dial"])
+            tabs = st.tabs(["All", "Manual Dial", "Auto Dial", "Per/Hr Dispo"])
             with tabs[0]:
                 plot_disposition_distribution(campaign_data)
             with tabs[1]:
                 plot_agent_disposition_manual(campaign_data)
             with tabs[2]:
                 plot_agent_disposition_auto(campaign_data)
+            with tabs[3]
+                plot_manual_vs_auto_dial(campaign_data)
             
     
             total_calls = campaign_data['Account'].count()
