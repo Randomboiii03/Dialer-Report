@@ -101,7 +101,7 @@ def plot_unique_calls_by_hour(campaign_data):
 
 def plot_connection_rate(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
-    hourly_stats = campaign_data.groupby('Hour of call_originate_time').agg({
+    hourly_stats = campaign_data.drop_duplicates().groupby('Hour of call_originate_time').agg({
         'system_disposition': lambda x: (x == 'CONNECTED').sum(),
         'dialled_phone': 'nunique'
     }).reset_index()
