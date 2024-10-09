@@ -669,14 +669,15 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Group the data by Hour, Call Type, and Disposition, and count unique 'Account's
     grouped = campaign_data.groupby(
-        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2']
-    )['dst_phone'].nunique().reset_index(name='Unique Account Count')
+        ['Hour of call_originate_time', 'CALL TYPE(Auto/Manual)', 'DISPOSITION_2', 'dst_phone']
+    ).nunique().reset_index(name='Unique Account Count')
 
     # Rename columns for consistency
     grouped = grouped.rename(columns={
         'Hour of call_originate_time': 'Hour',
         'CALL TYPE(Auto/Manual)': 'Call Type',
-        'DISPOSITION_2': 'Disposition'
+        'DISPOSITION_2': 'Disposition',
+        'dst_phone': 'num'
     })
 
     # Debugging Step 1: Verify the unique values after renaming
@@ -688,7 +689,7 @@ def plot_manual_vs_auto_dial(campaign_data):
     # Merge with all_combinations to ensure all possible combinations are present
     merged = all_combinations.merge(
         grouped,
-        on=['Hour', 'Call Type', 'Disposition'],
+        on=['Hour', 'Call Type', 'Disposition', 'num'],
         how='left'
     ).fillna(0)
 
