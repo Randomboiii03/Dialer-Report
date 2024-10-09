@@ -310,7 +310,7 @@ def display_disposition_metrics_auto(campaign_data):
 
 def plot_disposition_distribution(campaign_data):
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('Others', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
     
     # Calculate total unique 'Account's per 'username'
@@ -492,7 +492,7 @@ def plot_agent_disposition_manual(campaign_data):
     including percentage labels for each disposition segment.
     """
     # Display metrics for Manual Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('Others', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
     display_disposition_metrics_manual(campaign_data)
     
     # Filter data for Manual Dial
@@ -572,7 +572,7 @@ def plot_agent_disposition_auto(campaign_data):
     including percentage labels for each disposition segment.
     """
     # Display metrics for Auto Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('Others', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
     display_disposition_metrics_auto(campaign_data)
     
     # Filter data for Auto Dial
