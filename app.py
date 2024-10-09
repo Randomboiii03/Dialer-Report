@@ -697,7 +697,7 @@ def plot_manual_vs_auto_dial(campaign_data):
 
     # Debugging Step 2: Check the specific combination causing issues
     specific_data = merged[
-        (merged['Hour'] == 6) &
+        (merged['Hour'] == 7) &
         (merged['Call Type'] == 'Auto Dial') &
         (merged['Disposition'] == 'RPC')
     ]
