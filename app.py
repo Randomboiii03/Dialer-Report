@@ -213,6 +213,58 @@ def display_disposition_metrics(campaign_data):
     col1.metric("Total No. of RPC", f"{rpc_value:,}")
     col2.metric("Total No. of PTP", f"{ptp_value:,}")
     col3.metric("Total No. of PAYMENT", f"{payment_value:,}")
+def display_disposition_metrics_manual(campaign_data):
+    """
+    Displays disposition metrics for Manual Dial calls.
+    """
+    # Filter data for Manual Dial
+    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
+    
+    # Group by 'DISPOSITION_2' to count unique 'Account's
+    disposition_counts_manual = manual_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+    
+    # Extract counts for specific dispositions
+    rpc_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_value_manual = rpc_count_manual[0] if len(rpc_count_manual) > 0 else 0
+    
+    ptp_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_value_manual = ptp_count_manual[0] if len(ptp_count_manual) > 0 else 0
+    
+    payment_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_value_manual = payment_count_manual[0] if len(payment_count_manual) > 0 else 0
+    
+    # Display metrics in three columns
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Manual Dial - Total No. of RPC", f"{rpc_value_manual:,}")
+    col2.metric("Manual Dial - Total No. of PTP", f"{ptp_value_manual:,}")
+    col3.metric("Manual Dial - Total No. of PAYMENT", f"{payment_value_manual:,}")
+
+def display_disposition_metrics_auto(campaign_data):
+    """
+    Displays disposition metrics for Auto Dial calls.
+    """
+    # Filter data for Auto Dial
+    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
+    
+    # Group by 'DISPOSITION_2' to count unique 'Account's
+    disposition_counts_auto = auto_data.groupby(['DISPOSITION_2'])['Account'].nunique().reset_index()
+    
+    # Extract counts for specific dispositions
+    rpc_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'RPC', 'Account'].values
+    rpc_value_auto = rpc_count_auto[0] if len(rpc_count_auto) > 0 else 0
+    
+    ptp_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'Account'].values
+    ptp_value_auto = ptp_count_auto[0] if len(ptp_count_auto) > 0 else 0
+    
+    payment_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'PAYMENT', 'Account'].values
+    payment_value_auto = payment_count_auto[0] if len(payment_count_auto) > 0 else 0
+    
+    # Display metrics in three columns
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Auto Dial - Total No. of RPC", f"{rpc_value_auto:,}")
+    col2.metric("Auto Dial - Total No. of PTP", f"{ptp_value_auto:,}")
+    col3.metric("Auto Dial - Total No. of PAYMENT", f"{payment_value_auto:,}")
+
 
 # def plot_disposition_distribution(campaign_data):
 #     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['Account'].nunique().reset_index()
@@ -286,7 +338,7 @@ def plot_disposition_distribution(campaign_data):
     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
     
     # Display additional metrics (assuming this function is defined elsewhere)
-    
+    display_disposition_metrics(campaign_data)
     
     # Initialize Plotly figure
     fig2 = go.Figure()
@@ -438,6 +490,7 @@ def plot_agent_disposition_manual(campaign_data):
     Plots the disposition distribution per agent for Manual Dial calls.
     """
     # Filter data for Manual Dial
+    display_disposition_metrics_manual(campaign_data)
     manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
     
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
@@ -495,6 +548,7 @@ def plot_agent_disposition_auto(campaign_data):
     Plots the disposition distribution per agent for Auto Dial calls.
     """
     # Filter data for Auto Dial
+    display_disposition_metrics_auto(campaign_data)
     auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
     
     # Group by 'username' and 'DISPOSITION_2' to count unique 'Account's
@@ -600,7 +654,7 @@ def main():
             # plot_disposition_distribution(campaign_data)
             plot_average_talk_time(campaign_data)
             st.header("Agent Disposition Distribution by Call Type")
-            display_disposition_metrics(campaign_data)
+            
             tabs = st.tabs(["Manual Dial", "Auto Dial", "All"])
             with tabs[0]:
                 plot_agent_disposition_manual(campaign_data)
