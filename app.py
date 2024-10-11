@@ -210,7 +210,7 @@ def plot_call_type_distribution(campaign_data):
         'Auto Dial': unique_auto_dials,
         'Manual Dial': unique_manual_dials
     }
-
+    st.write(unique_counts)
     # Create the pie chart
     fig4 = px.pie(
         values=call_type_dist.values,
@@ -235,8 +235,6 @@ def plot_call_type_distribution(campaign_data):
     # Render the plot
     st.plotly_chart(fig4)
 
-    # Render the plot
-    st.plotly_chart(fig4)
     
 def display_disposition_metrics(campaign_data):
     disposition_counts = campaign_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
