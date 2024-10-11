@@ -210,7 +210,7 @@ def plot_call_type_distribution(campaign_data):
         'Auto Dial': unique_auto_dials,
         'Manual Dial': unique_manual_dials
     }
-    st.write(unique_counts)
+
     # Create the pie chart
     fig4 = px.pie(
         values=call_type_dist.values,
