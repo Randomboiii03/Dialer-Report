@@ -204,7 +204,8 @@ def plot_call_type_distribution(campaign_data):
     # Calculate unique counts
     unique_auto_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']['dialled_phone'].nunique()
     unique_manual_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']['dialled_phone'].nunique()
-
+    st.write(unique_auto_dials)
+    st.write(unique_manual_dials)
     # Create the pie chart
     fig4 = px.pie(
         values=call_type_dist.values,
