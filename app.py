@@ -176,11 +176,36 @@ def plot_manual_auto(campaign_data):
     fig_manual_auto.update_xaxes(range=[6, 20], tickmode='linear', dtick=1)
     st.plotly_chart(fig_manual_auto)
 
+# def plot_call_type_distribution(campaign_data):
+#     call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
+#     total_calls = call_type_dist.sum()
+#     call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int)
+
+#     fig4 = px.pie(
+#         values=call_type_dist.values,
+#         names=call_type_dist.index,
+#         title='Call Type Distribution',
+#         labels={'label': 'Call Type', 'value': 'Number of Calls'}
+#     )
+
+#     fig4.update_traces(
+#         textposition='inside',
+#         textinfo='percent+label',
+#         hoverinfo='label+percent+value',
+#         texttemplate='%{label}<br>%{percent:.0%}'
+#     )
+
+#     st.plotly_chart(fig4)
 def plot_call_type_distribution(campaign_data):
+    # Calculate the total call count and unique counts for Auto and Manual dials
     call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
     total_calls = call_type_dist.sum()
-    call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int)
 
+    # Calculate unique counts
+    unique_auto_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto']['CALL_ID'].nunique()
+    unique_manual_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual']['CALL_ID'].nunique()
+
+    # Create the pie chart
     fig4 = px.pie(
         values=call_type_dist.values,
         names=call_type_dist.index,
@@ -188,15 +213,22 @@ def plot_call_type_distribution(campaign_data):
         labels={'label': 'Call Type', 'value': 'Number of Calls'}
     )
 
+    # Update the pie chart traces with custom hovertemplate
     fig4.update_traces(
         textposition='inside',
         textinfo='percent+label',
-        hoverinfo='label+percent+value',
-        texttemplate='%{label}<br>%{percent:.0%}'
+        hovertemplate=(
+            '%{label}<br>' 
+            'Count: %{value}<br>' 
+            'Unique Count: ' + 
+            (f"{unique_auto_dials}" if '%{label}' == 'Auto' else f"{unique_manual_dials}") + 
+            '<extra></extra>'
+        )
     )
 
+    # Render the plot
     st.plotly_chart(fig4)
-
+    
 def display_disposition_metrics(campaign_data):
     disposition_counts = campaign_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
 
