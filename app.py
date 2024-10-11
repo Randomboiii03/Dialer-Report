@@ -204,8 +204,13 @@ def plot_call_type_distribution(campaign_data):
     # Calculate unique counts
     unique_auto_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']['dialled_phone'].nunique()
     unique_manual_dials = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']['dialled_phone'].nunique()
-    st.write(unique_auto_dials)
-    st.write(unique_manual_dials)
+
+    # Create a mapping for unique counts
+    unique_counts = {
+        'Auto Dial': unique_auto_dials,
+        'Manual Dial': unique_manual_dials
+    }
+
     # Create the pie chart
     fig4 = px.pie(
         values=call_type_dist.values,
@@ -221,8 +226,7 @@ def plot_call_type_distribution(campaign_data):
         hovertemplate=(
             '%{label}<br>' 
             'Count: %{value}<br>' 
-            'Unique Count: ' + 
-            (f"{unique_auto_dials}" if '%{label}' == 'Auto Dial' else f"{unique_manual_dials}") + 
+            f'Unique Count: {unique_counts["%{label}"]}' 
             '<extra></extra>'
         )
     )
