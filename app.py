@@ -219,17 +219,21 @@ def plot_call_type_distribution(campaign_data):
         labels={'label': 'Call Type', 'value': 'Number of Calls'}
     )
 
+    # Prepare hover text with unique counts
+    hover_text = []
+    for label, count in zip(call_type_dist.index, call_type_dist.values):
+        unique_count = unique_counts[label]  # Access the unique count
+        hover_text.append(f"{label}<br>Count: {count}<br>Unique Count: {unique_count}")
+
     # Update the pie chart traces with custom hovertemplate
     fig4.update_traces(
         textposition='inside',
         textinfo='percent+label',
-        hovertemplate=(
-            '%{label}<br>' 
-            'Count: %{value}<br>' 
-            f'Unique Count: {unique_counts["%{label}"]}' 
-            '<extra></extra>'
-        )
+        hovertemplate=[text + '<extra></extra>' for text in hover_text]
     )
+
+    # Render the plot
+    st.plotly_chart(fig4)
 
     # Render the plot
     st.plotly_chart(fig4)
