@@ -221,7 +221,7 @@ def plot_call_type_distribution(campaign_data):
             '%{label}<br>' 
             'Count: %{value}<br>' 
             'Unique Count: ' + 
-            (f"{unique_auto_dials}" if '%{label}' == 'Auto' else f"{unique_manual_dials}") + 
+            (f"{unique_auto_dials}" if '%{label}' == 'Auto Dial' else f"{unique_manual_dials}") + 
             '<extra></extra>'
         )
     )
