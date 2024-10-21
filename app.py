@@ -29,6 +29,21 @@ def note():
         yield word + " "
         sleep(0.05)
 
+# def display_metrics(campaign_data):
+#     total_unique_accounts = campaign_data['dialled_phone'].nunique()
+#     total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
+#     overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
+#     total_calls = campaign_data['dialled_phone'].count()
+#     penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
+
+#     col1, col2, col3 = st.columns(3)
+#     col1.metric("Total Unique Accounts", f"{total_unique_accounts:,}")
+#     col2.metric("Total Dialed", f"{total_calls:,}")
+#     col3.metric("Total Connected", f"{total_connected:,}")
+
+#     col1, col2, col3 = st.columns(3)
+#     col2.metric("Penetration Rate", f"{penetration_rate:.0%}")
+#     col3.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")
 def display_metrics(campaign_data):
     total_unique_accounts = campaign_data['dialled_phone'].nunique()
     total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
@@ -36,14 +51,24 @@ def display_metrics(campaign_data):
     total_calls = campaign_data['dialled_phone'].count()
     penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
 
-    col1, col2, col3 = st.columns(3)
+    # **New Calculation for Total PTP**
+    total_ptp = campaign_data[campaign_data['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"])]['dialled_phone'].nunique()
+
+    # **Adjusting to Four Columns to Include Total PTP**
+    col1, col2, col3, col4 = st.columns(4)
     col1.metric("Total Unique Accounts", f"{total_unique_accounts:,}")
     col2.metric("Total Dialed", f"{total_calls:,}")
     col3.metric("Total Connected", f"{total_connected:,}")
+    col4.metric("Total PTP", f"{total_ptp:,}")  # **New Metric Added Here**
 
-    col1, col2, col3 = st.columns(3)
-    col2.metric("Penetration Rate", f"{penetration_rate:.0%}")
-    col3.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")
+    # **Adjusting the Second Row for Metrics**
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Penetration Rate", f"{penetration_rate:.0%}")
+    col2.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")
+    # You can utilize col3 and col4 for additional metrics or leave them empty
+    col3.metric("", "")  # Placeholder
+    col4.metric("", "")  # Placeholder
+
 
 def plot_calls_by_hour(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
