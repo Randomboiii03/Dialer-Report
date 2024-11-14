@@ -543,6 +543,7 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
         - Penetration Rate: {penetration_rate}
         - Total Connected Calls: {total_connected}
         - Overall Connection Rate: {overall_connection_rate}
+        - Call Hours Range: 6 AM to 7 PM
     """
 
     model = genai.GenerativeModel(
