@@ -277,12 +277,13 @@ def display_disposition_metrics(campaign_data):
     col1.metric("Total No. of RPC", f"{rpc_value:,}")
     col2.metric("Total No. of PTP", f"{ptp_value:,}")
     col3.metric("Total No. of PAYMENT", f"{payment_value:,}")
-def display_disposition_metrics_manual(campaign_data):
+    
+def display_disposition_metrics_call_type(campaign_data, type="Manual Dial"):
     """
     Displays disposition metrics for Manual Dial calls.
     """
     # Filter data for Manual Dial
-    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
+    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
     
     # Group by 'DISPOSITION_2' to count unique 'dialled_phone's
     disposition_counts_manual = manual_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
@@ -299,78 +300,9 @@ def display_disposition_metrics_manual(campaign_data):
     
     # Display metrics in three columns
     col1, col2, col3 = st.columns(3)
-    col1.metric("Manual Dial - Total No. of RPC", f"{rpc_value_manual:,}")
-    col2.metric("Manual Dial - Total No. of PTP", f"{ptp_value_manual:,}")
-    col3.metric("Manual Dial - Total No. of PAYMENT", f"{payment_value_manual:,}")
-
-def display_disposition_metrics_auto(campaign_data):
-    """
-    Displays disposition metrics for Auto Dial calls.
-    """
-    # Filter data for Auto Dial
-    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
-    
-    # Group by 'DISPOSITION_2' to count unique 'dialled_phone's
-    disposition_counts_auto = auto_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
-    
-    # Extract counts for specific dispositions
-    rpc_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
-    rpc_value_auto = rpc_count_auto[0] if len(rpc_count_auto) > 0 else 0
-    
-    ptp_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
-    ptp_value_auto = ptp_count_auto[0] if len(ptp_count_auto) > 0 else 0
-    
-    payment_count_auto = disposition_counts_auto.loc[disposition_counts_auto['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
-    payment_value_auto = payment_count_auto[0] if len(payment_count_auto) > 0 else 0
-    
-    # Display metrics in three columns
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Auto Dial - Total No. of RPC", f"{rpc_value_auto:,}")
-    col2.metric("Auto Dial - Total No. of PTP", f"{ptp_value_auto:,}")
-    col3.metric("Auto Dial - Total No. of PAYMENT", f"{payment_value_auto:,}")
-
-
-# def plot_disposition_distribution(campaign_data):
-#     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
-#     total_counts = campaign_data.groupby('username')['dialled_phone'].nunique().reset_index().rename(columns={'dialled_phone': 'Total_Dialed'})
-#     disposition_counts = disposition_counts.merge(total_counts, on='username')
-#     disposition_counts['Percentage'] = (disposition_counts['dialled_phone'] / disposition_counts['Total_Dialed'] * 100).round().astype(int)
-
-#     unique_dispositions = disposition_counts['DISPOSITION_2'].unique()
-#     options = list(unique_dispositions)
-#     default_options = [item for item in options if item in ["PTP", "PTP OLD", "PTP NEW", "PTP FF UP", "RPC"]]
-
-#     selected_dispos = st.multiselect('Select Dispositions to Show:', options=options, default=default_options)
-
-#     display_disposition_metrics(campaign_data)
-
-#     fig2 = go.Figure()
-#     colors = plotly.colors.qualitative.Vivid
-
-#     if selected_dispos:
-#         for i, dispo in enumerate(selected_dispos):
-#             color = colors[i % len(colors)]
-#             subset = disposition_counts[disposition_counts['DISPOSITION_2'] == dispo]
-#             fig2.add_trace(go.Bar(
-#                 y=subset['username'],
-#                 x=subset['dialled_phone'],
-#                 name=dispo,
-#                 orientation='h',
-#                 marker=dict(color=color),
-#                 text=[f"{count:,} ({percent}%)" for count, percent in zip(subset['dialled_phone'], subset['Percentage'])],
-#                 textposition='outside'
-#             ))
-
-#     fig2.update_layout(
-#         title='Disposition Distribution per Agent (Unique Accounts)',
-#         xaxis_title='Number of Unique Accounts',
-#         yaxis_title='Agents',
-#         barmode='stack', 
-#         height=max(500, len(disposition_counts['username'].unique()) * 50),
-#         width=10000
-#     )
-
-#     st.plotly_chart(fig2)
+    col1.metric(f"{type} - Total No. of RPC", f"{rpc_value_manual:,}")
+    col2.metric(f"{type} - Total No. of PTP", f"{ptp_value_manual:,}")
+    col3.metric(f"{type} - Total No. of PAYMENT", f"{payment_value_manual:,}")
 
 def plot_disposition_distribution(campaign_data):
     # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
@@ -441,34 +373,6 @@ def plot_disposition_distribution(campaign_data):
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig2)
 
-# def plot_average_talk_time(campaign_data):
-#     connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
-#     connected_calls['Talk Time in Seconds'] = connected_calls['End Time in Seconds'] - connected_calls['Start Time in Seconds']
-#     avg_talk_time = connected_calls.groupby('username')['Talk Time in Seconds'].mean().reset_index()
-#     avg_talk_time['Minutes'] = (avg_talk_time['Talk Time in Seconds'] // 60).astype(int)
-#     avg_talk_time['Seconds'] = (avg_talk_time['Talk Time in Seconds'] % 60).astype(int)
-#     avg_talk_time['Formatted Talk Time'] = avg_talk_time['Minutes'].astype(str) + ' min ' + avg_talk_time['Seconds'].astype(str) + ' sec'
-
-#     fig_talk_time = px.bar(
-#         avg_talk_time,
-#         y='username',
-#         x='Talk Time in Seconds',
-#         title='Average Connected Talk Time per Agent',
-#         orientation='h',
-#         labels={'Talk Time in Seconds': 'Average Talk Time (in Seconds)', 'username': 'Agent'},
-#         text='Formatted Talk Time'
-#     )
-
-#     fig_talk_time.update_traces(texttemplate='%{text}', textposition='outside')
-#     fig_talk_time.update_layout(
-#         yaxis_title='Agent',
-#         xaxis_title='Average Talk Time (Seconds)',
-#         xaxis_tickangle=-45,
-#         height=max(500, len(avg_talk_time) * 50),
-#         margin=dict(t=100)
-#     )
-
-#     st.plotly_chart(fig_talk_time)
 def plot_average_talk_time(campaign_data):
     # Filter connected calls and remove duplicates
     connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
@@ -510,6 +414,7 @@ def plot_average_talk_time(campaign_data):
 
     # Display the plot in Streamlit
     st.plotly_chart(fig_talk_time)
+    
 @st.cache_data
 def generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate):
     generation_config = {
@@ -553,17 +458,17 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
     )
     response = model.generate_content(prompt)
     st.write(response.text)
-def plot_agent_disposition_manual(campaign_data):
+    
+def plot_agent_disposition_call_type(campaign_data, type="Manual Dial"):
     """
     Plots the disposition distribution per agent for Manual Dial calls,
     including percentage labels for each disposition segment.
     """
     # Display metrics for Manual Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
-    display_disposition_metrics_manual(campaign_data)
+    display_disposition_metrics_call_type(campaign_data)
     
     # Filter data for Manual Dial
-    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Manual Dial']
+    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
     
     if manual_data.empty:
         st.warning("No Manual Dial data available for this campaign.")
@@ -771,9 +676,9 @@ def main():
             with tabs[0]:
                 plot_disposition_distribution(campaign_data)
             with tabs[1]:
-                plot_agent_disposition_manual(campaign_data)
+                plot_agent_disposition_call_type(campaign_data)
             with tabs[2]:
-                plot_agent_disposition_auto(campaign_data)
+                plot_agent_disposition_call_type(campaign_data, "Auto Dial")
 
             
     
