@@ -524,6 +524,7 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
     system_prompt = f"""
         Dive into the data and craft a snappy, engaging summary of the {selected_campaign} campaign. Use bullet points to highlight the must-know metrics and insights. Keep it clear and relatable, using a tone that resonates with a millennial audience. Don’t forget to include the range of call hours for context!
 
+        Here's the sample format of summary, always use this for response:
         **Campaign Highlights: {selected_campaign}**
         - **Total Calls Dialed:** {total_calls} 📞
         - **Total Unique Accounts:** {total_unique_accounts} 👥
