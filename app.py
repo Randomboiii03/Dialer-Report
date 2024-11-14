@@ -23,27 +23,14 @@ def load_and_decrypt_file(uploaded_file):
     decrypted.seek(0)
     return pd.read_excel(decrypted)
 
+
 def note():
     note = ":red[**Note:**] The data presented here may be incomplete due to the system's heavy computational load."
     for word in note.split(" "):
         yield word + " "
         sleep(0.05)
 
-# def display_metrics(campaign_data):
-#     total_unique_accounts = campaign_data['dialled_phone'].nunique()
-#     total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
-#     overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
-#     total_calls = campaign_data['dialled_phone'].count()
-#     penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
 
-#     col1, col2, col3 = st.columns(3)
-#     col1.metric("Total Unique Accounts", f"{total_unique_accounts:,}")
-#     col2.metric("Total Dialed", f"{total_calls:,}")
-#     col3.metric("Total Connected", f"{total_connected:,}")
-
-#     col1, col2, col3 = st.columns(3)
-#     col2.metric("Penetration Rate", f"{penetration_rate:.0%}")
-#     col3.metric("Overall Connection Rate", f"{overall_connection_rate:.0%}")
 def display_metrics(campaign_data):
     total_unique_accounts = campaign_data['dialled_phone'].nunique()
     total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
@@ -97,6 +84,7 @@ def plot_calls_by_hour(campaign_data):
 
     st.plotly_chart(fig_combined)
 
+
 def plot_unique_calls_by_hour(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
     connected_by_hour = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates().groupby('Hour of call_originate_time').size().reset_index(name='Connected Calls')
@@ -123,6 +111,7 @@ def plot_unique_calls_by_hour(campaign_data):
                                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 
     st.plotly_chart(fig_combined)
+
 
 def plot_connection_rate(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
@@ -151,6 +140,7 @@ def plot_connection_rate(campaign_data):
     fig3.update_layout(legend_title="",
                         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig3)
+
 
 def plot_manual_auto(campaign_data):
     all_hours = pd.DataFrame({'Hour of call_originate_time': range(6, 21)})
@@ -201,26 +191,7 @@ def plot_manual_auto(campaign_data):
     fig_manual_auto.update_xaxes(range=[6, 20], tickmode='linear', dtick=1)
     st.plotly_chart(fig_manual_auto)
 
-# def plot_call_type_distribution(campaign_data):
-#     call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
-#     total_calls = call_type_dist.sum()
-#     call_type_percentages = (call_type_dist / total_calls * 100).round().astype(int)
 
-#     fig4 = px.pie(
-#         values=call_type_dist.values,
-#         names=call_type_dist.index,
-#         title='Call Type Distribution',
-#         labels={'label': 'Call Type', 'value': 'Number of Calls'}
-#     )
-
-#     fig4.update_traces(
-#         textposition='inside',
-#         textinfo='percent+label',
-#         hoverinfo='label+percent+value',
-#         texttemplate='%{label}<br>%{percent:.0%}'
-#     )
-
-#     st.plotly_chart(fig4)
 def plot_call_type_distribution(campaign_data):
     # Calculate the total call count and unique counts for Auto and Manual dials
     call_type_dist = campaign_data['CALL TYPE(Auto/Manual)'].value_counts()
@@ -277,7 +248,8 @@ def display_disposition_metrics(campaign_data):
     col1.metric("Total No. of RPC", f"{rpc_value:,}")
     col2.metric("Total No. of PTP", f"{ptp_value:,}")
     col3.metric("Total No. of PAYMENT", f"{payment_value:,}")
-    
+
+
 def display_disposition_metrics_call_type(campaign_data, type="Manual Dial"):
     """
     Displays disposition metrics for Manual Dial calls.
