@@ -255,26 +255,27 @@ def display_disposition_metrics_call_type(campaign_data, type="Manual Dial"):
     Displays disposition metrics for Manual Dial calls.
     """
     # Filter data for Manual Dial
-    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
+    call_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
     
     # Group by 'DISPOSITION_2' to count unique 'dialled_phone's
-    disposition_counts_manual = manual_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
+    disposition_counts_call = call_data.groupby(['DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
     
     # Extract counts for specific dispositions
-    rpc_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
-    rpc_value_manual = rpc_count_manual[0] if len(rpc_count_manual) > 0 else 0
+    rpc_count_call = disposition_counts_call.loc[disposition_counts_call['DISPOSITION_2'] == 'RPC', 'dialled_phone'].values
+    rpc_value_call = rpc_count_call[0] if len(rpc_count_call) > 0 else 0
     
-    ptp_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
-    ptp_value_manual = ptp_count_manual[0] if len(ptp_count_manual) > 0 else 0
+    ptp_count_call = disposition_counts_call.loc[disposition_counts_call['DISPOSITION_2'].isin(["PTP", "PTP OLD", "PTP NEW", "PTP FF UP"]), 'dialled_phone'].values
+    ptp_value_call = ptp_count_call[0] if len(ptp_count_call) > 0 else 0
     
-    payment_count_manual = disposition_counts_manual.loc[disposition_counts_manual['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
-    payment_value_manual = payment_count_manual[0] if len(payment_count_manual) > 0 else 0
+    payment_count_call = disposition_counts_call.loc[disposition_counts_call['DISPOSITION_2'] == 'PAYMENT', 'dialled_phone'].values
+    payment_value_call = payment_count_call[0] if len(payment_count_call) > 0 else 0
     
     # Display metrics in three columns
     col1, col2, col3 = st.columns(3)
-    col1.metric(f"{type} - Total No. of RPC", f"{rpc_value_manual:,}")
-    col2.metric(f"{type} - Total No. of PTP", f"{ptp_value_manual:,}")
-    col3.metric(f"{type} - Total No. of PAYMENT", f"{payment_value_manual:,}")
+    col1.metric(f"{type} - Total No. of RPC", f"{rpc_value_call:,}")
+    col2.metric(f"{type} - Total No. of PTP", f"{ptp_value_call:,}")
+    col3.metric(f"{type} - Total No. of PAYMENT", f"{payment_value_call:,}")
+
 
 def plot_disposition_distribution(campaign_data):
     # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
@@ -345,6 +346,7 @@ def plot_disposition_distribution(campaign_data):
     # Display the Plotly chart in Streamlit
     st.plotly_chart(fig2)
 
+
 def plot_average_talk_time(campaign_data):
     # Filter connected calls and remove duplicates
     connected_calls = campaign_data[campaign_data['system_disposition'] == 'CONNECTED'].drop_duplicates()
@@ -387,6 +389,90 @@ def plot_average_talk_time(campaign_data):
     # Display the plot in Streamlit
     st.plotly_chart(fig_talk_time)
     
+
+def plot_agent_disposition_call_type(campaign_data, type="Manual Dial"):
+    """
+    Plots the disposition distribution per agent for Manual Dial calls,
+    including percentage labels for each disposition segment.
+    """
+    # Display metrics for Manual Dial calls
+    # display_disposition_metrics_call_type(campaign_data)
+    
+    # Filter data for Manual Dial
+    call_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
+
+    if call_data.empty:
+        st.warning("No Manual Dial data available for this campaign.")
+        return
+    
+    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
+    disposition_counts_call = call_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index(name='Count')
+    
+    # Pivot the data to have dispositions as columns
+    disposition_pivot_call = disposition_counts_call.pivot_table(
+        index='username',
+        columns='DISPOSITION_2',
+        values='Count',
+        fill_value=0
+    ).reset_index()
+
+    if 'OTHERS' not in disposition_pivot_call.columns:
+        disposition_pivot_call['OTHERS'] = 0
+    
+    
+    # Calculate total dispositions per agent for percentage calculation
+    disposition_pivot_call['Total'] = disposition_pivot_call[disposition_pivot_call.columns.difference(['username'])].sum(axis=1)
+    
+    # Calculate percentage for each disposition
+    for dispo in disposition_pivot_call.columns:
+        if dispo != 'username' and dispo != 'Total':
+            disposition_pivot_call[f'{dispo}_Percent'] = (disposition_pivot_call[dispo] / disposition_pivot_call['Total'] * 100).round(1)
+    
+    # Create a list of dispositions for consistent coloring
+    dispositions = call_data['DISPOSITION_2'].unique().tolist()
+    dispositions.sort()  # Sort dispositions for consistent ordering
+    
+    # Define colors for different dispositions
+    colors = px.colors.qualitative.Vivid
+    color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
+    
+    # Create a Plotly figure
+    fig_manual = go.Figure()
+    
+    # Iterate over each disposition to add a bar for each
+    for dispo in dispositions:
+        fig_manual.add_trace(go.Bar(
+            y=disposition_pivot_call['username'],
+            x=disposition_pivot_call[dispo],
+            name=dispo,
+            orientation='h',
+            marker=dict(color=color_map[dispo]),
+            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>',
+            text=disposition_pivot_call[f'{dispo}_Percent'].astype(str) + '%',
+            textposition='inside'
+        ))
+        
+    # Update layout for stacked bars
+    fig_manual.update_layout(
+        barmode='stack',
+        title=f'Agent Disposition Distribution - {type}',
+        xaxis_title='Number of Unique Accounts',
+        yaxis_title='Agents',
+        legend_title='Disposition',
+        height=max(500, len(disposition_pivot_call['username']) * 50),
+        margin=dict(l=150, r=50, t=100, b=50)
+    )
+    
+    # Update y-axis to ensure agents are sorted and fully visible
+    fig_manual.update_yaxes(categoryorder='total ascending')
+    
+    # Update layout to adjust text styling
+    fig_manual.update_traces(textfont=dict(color='white', size=10))
+    
+    # Display the Plotly chart in Streamlit
+    st.plotly_chart(fig_manual, use_container_width=True)
+
+
 @st.cache_data
 def generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate):
     generation_config = {
@@ -402,13 +488,13 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
         Dive into the data and craft a snappy, engaging summary of the {selected_campaign} campaign. Use bullet points to highlight the must-know metrics and insights. Keep it clear and relatable, using a tone that resonates with a millennial audience. Don’t forget to include the range of call hours for context!
 
         Here's the sample format of summary, always use this for response:
-        **Campaign Highlights: {selected_campaign}**
-        - **Total Calls Dialed:** {total_calls} 📞
-        - **Total Unique Accounts:** {total_unique_accounts} 👥
-        - **Penetration Rate:** {penetration_rate:.0%} 🚀
-        - **Total Connected Calls:** {total_connected} 📈
-        - **Overall Connection Rate:** {overall_connection_rate:.0%} 🌟
-        - **Call Hours Range:** 6 AM to 8 PM ⏰
+        **Campaign Highlights: <SAMPLE DATA>**
+        - **Total Calls Dialed:** <SAMPLE DATA> 📞
+        - **Total Unique Accounts:** <SAMPLE DATA> 👥
+        - **Penetration Rate:** <SAMPLE DATA> 🚀
+        - **Total Connected Calls:** <SAMPLE DATA> 📈
+        - **Overall Connection Rate:** <SAMPLE DATA> 🌟
+        - **Call Hours Range:** 6 AM to 7 PM ⏰
 
         Wrap it up with actionable insights and key takeaways that can inspire future strategies. Let’s make this data pop!
     """
@@ -431,165 +517,6 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
     response = model.generate_content(prompt)
     st.write(response.text)
     
-def plot_agent_disposition_call_type(campaign_data, type="Manual Dial"):
-    """
-    Plots the disposition distribution per agent for Manual Dial calls,
-    including percentage labels for each disposition segment.
-    """
-    # Display metrics for Manual Dial calls
-    display_disposition_metrics_call_type(campaign_data)
-    
-    # Filter data for Manual Dial
-    manual_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
-    
-    if manual_data.empty:
-        st.warning("No Manual Dial data available for this campaign.")
-        return
-    
-    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
-    disposition_counts_manual = manual_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index(name='Count')
-    
-    # Pivot the data to have dispositions as columns
-    disposition_pivot_manual = disposition_counts_manual.pivot_table(
-        index='username',
-        columns='DISPOSITION_2',
-        values='Count',
-        fill_value=0
-    ).reset_index()
-    
-    # Calculate total dispositions per agent for percentage calculation
-    disposition_pivot_manual['Total'] = disposition_pivot_manual[disposition_pivot_manual.columns.difference(['username'])].sum(axis=1)
-    
-    # Calculate percentage for each disposition
-    for dispo in disposition_pivot_manual.columns:
-        if dispo != 'username' and dispo != 'Total':
-            disposition_pivot_manual[f'{dispo}_Percent'] = (disposition_pivot_manual[dispo] / disposition_pivot_manual['Total'] * 100).round(1)
-    
-    # Create a list of dispositions for consistent coloring
-    dispositions = manual_data['DISPOSITION_2'].unique().tolist()
-    dispositions.sort()  # Sort dispositions for consistent ordering
-    
-    # Define colors for different dispositions
-    colors = px.colors.qualitative.Vivid
-    color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
-    
-    # Create a Plotly figure
-    fig_manual = go.Figure()
-    
-    # Iterate over each disposition to add a bar for each
-    for dispo in dispositions:
-        fig_manual.add_trace(go.Bar(
-            y=disposition_pivot_manual['username'],
-            x=disposition_pivot_manual[dispo],
-            name=dispo,
-            orientation='h',
-            marker=dict(color=color_map[dispo]),
-            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>',
-            text=disposition_pivot_manual[f'{dispo}_Percent'].astype(str) + '%',
-            textposition='inside'
-        ))
-    
-    # Update layout for stacked bars
-    fig_manual.update_layout(
-        barmode='stack',
-        title='Agent Disposition Distribution - Manual Dial',
-        xaxis_title='Number of Unique Accounts',
-        yaxis_title='Agents',
-        legend_title='Disposition',
-        height=max(500, len(disposition_pivot_manual['username']) * 50),
-        margin=dict(l=150, r=50, t=100, b=50)
-    )
-    
-    # Update y-axis to ensure agents are sorted and fully visible
-    fig_manual.update_yaxes(categoryorder='total ascending')
-    
-    # Update layout to adjust text styling
-    fig_manual.update_traces(textfont=dict(color='white', size=10))
-    
-    # Display the Plotly chart in Streamlit
-    st.plotly_chart(fig_manual, use_container_width=True)
-
-
-def plot_agent_disposition_auto(campaign_data):
-    """
-    Plots the disposition distribution per agent for Auto Dial calls,
-    including percentage labels for each disposition segment.
-    """
-    # Display metrics for Auto Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
-    display_disposition_metrics_auto(campaign_data)
-    
-    # Filter data for Auto Dial
-    auto_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == 'Auto Dial']
-    
-    if auto_data.empty:
-        st.warning("No Auto Dial data available for this campaign.")
-        return
-    
-    # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
-    disposition_counts_auto = auto_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index(name='Count')
-    
-    # Pivot the data to have dispositions as columns
-    disposition_pivot_auto = disposition_counts_auto.pivot_table(
-        index='username',
-        columns='DISPOSITION_2',
-        values='Count',
-        fill_value=0
-    ).reset_index()
-    
-    # Calculate total dispositions per agent for percentage calculation
-    disposition_pivot_auto['Total'] = disposition_pivot_auto[disposition_pivot_auto.columns.difference(['username'])].sum(axis=1)
-    
-    # Calculate percentage for each disposition
-    for dispo in disposition_pivot_auto.columns:
-        if dispo != 'username' and dispo != 'Total':
-            disposition_pivot_auto[f'{dispo}_Percent'] = (disposition_pivot_auto[dispo] / disposition_pivot_auto['Total'] * 100).round(1)
-    
-    # Create a list of dispositions for consistent coloring
-    dispositions = auto_data['DISPOSITION_2'].unique().tolist()
-    dispositions.sort()  # Sort dispositions for consistent ordering
-    
-    # Define colors for different dispositions
-    colors = px.colors.qualitative.Vivid
-    color_map = {dispo: colors[i % len(colors)] for i, dispo in enumerate(dispositions)}
-    
-    # Create a Plotly figure
-    fig_auto = go.Figure()
-    
-    # Iterate over each disposition to add a bar for each
-    for dispo in dispositions:
-        fig_auto.add_trace(go.Bar(
-            y=disposition_pivot_auto['username'],
-            x=disposition_pivot_auto[dispo],
-            name=dispo,
-            orientation='h',
-            marker=dict(color=color_map[dispo]),
-            hovertemplate=f'Disposition: {dispo}<br>Agent: %{{y}}<br>Count: %{{x}}<extra></extra>',
-            text=disposition_pivot_auto[f'{dispo}_Percent'].astype(str) + '%',
-            textposition='inside'
-        ))
-    
-    # Update layout for stacked bars
-    fig_auto.update_layout(
-        barmode='stack',
-        title='Agent Disposition Distribution - Auto Dial',
-        xaxis_title='Number of Unique Accounts',
-        yaxis_title='Agents',
-        legend_title='Disposition',
-        height=max(500, len(disposition_pivot_auto['username']) * 50),
-        margin=dict(l=150, r=50, t=100, b=50)
-    )
-    
-    # Update y-axis to ensure agents are sorted and fully visible
-    fig_auto.update_yaxes(categoryorder='total ascending')
-    
-    # Update layout to adjust text styling
-    fig_auto.update_traces(textfont=dict(color='white', size=10))
-    
-    # Display the Plotly chart in Streamlit
-    st.plotly_chart(fig_auto, use_container_width=True)
-
-
 
 def main():
     uploaded_file = st.sidebar.file_uploader("Choose a XLSX file", type="xlsx")
@@ -618,7 +545,11 @@ def main():
         if selected_month is not None:
             conditions &= (df['Month'] == selected_month)
         
-        campaign_data = df[conditions].replace('OTHERS', 'SYSTEM DISPOSITION')
+        campaign_data = df[conditions]
+
+        # if 'OTHERS' in campaign_data['DISPOSITION_2'].unique():
+        #     print(campaign_data['DISPOSITION_2'].unique())
+        #     campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
 
         if campaign_data.empty:
             st.subheader(f'No Data')
@@ -660,7 +591,7 @@ def main():
             total_connected = campaign_data[campaign_data['system_disposition'] == 'CONNECTED']['dialled_phone'].nunique()
             overall_connection_rate = total_connected / total_unique_accounts if total_unique_accounts > 0 else 0
     
-            generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate)
+            # generate_summary(campaign_data, selected_campaign, total_calls, total_unique_accounts, penetration_rate, total_connected, overall_connection_rate)
     else:
         st.write("Please upload a XLSX file to begin the analysis.")
 
