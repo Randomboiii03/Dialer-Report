@@ -374,7 +374,7 @@ def display_disposition_metrics_auto(campaign_data):
 
 def plot_disposition_distribution(campaign_data):
     # Group by 'username' and 'DISPOSITION_2' to count unique 'dialled_phone's
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
     disposition_counts = campaign_data.groupby(['username', 'DISPOSITION_2'])['dialled_phone'].nunique().reset_index()
     
     # Calculate total unique 'dialled_phone's per 'username'
@@ -559,7 +559,7 @@ def plot_agent_disposition_manual(campaign_data):
     including percentage labels for each disposition segment.
     """
     # Display metrics for Manual Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
     display_disposition_metrics_manual(campaign_data)
     
     # Filter data for Manual Dial
@@ -639,7 +639,7 @@ def plot_agent_disposition_auto(campaign_data):
     including percentage labels for each disposition segment.
     """
     # Display metrics for Auto Dial calls
-    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2'].replace('OTHERS', 'SYSTEM DISPOSITION')
+    campaign_data['DISPOSITION_2'] = campaign_data['DISPOSITION_2']
     display_disposition_metrics_auto(campaign_data)
     
     # Filter data for Auto Dial
@@ -741,7 +741,7 @@ def main():
         if selected_month is not None:
             conditions &= (df['Month'] == selected_month)
         
-        campaign_data = df[conditions]
+        campaign_data = df[conditions].replace('OTHERS', 'SYSTEM DISPOSITION')
 
         if campaign_data.empty:
             st.subheader(f'No Data')
