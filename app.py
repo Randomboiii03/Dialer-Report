@@ -531,7 +531,7 @@ def generate_summary(campaign_data, selected_campaign, total_calls, total_unique
         - **Penetration Rate:** {penetration_rate:.0%} 🚀
         - **Total Connected Calls:** {total_connected} 📈
         - **Overall Connection Rate:** {overall_connection_rate:.0%} 🌟
-        - **Call Hours Range:** [e.g., 6 AM to 8 PM] ⏰
+        - **Call Hours Range:** 6 AM to 8 PM ⏰
 
         Wrap it up with actionable insights and key takeaways that can inspire future strategies. Let’s make this data pop!
     """
