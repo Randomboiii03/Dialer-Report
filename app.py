@@ -396,7 +396,7 @@ def plot_agent_disposition_call_type(campaign_data, type="Manual Dial"):
     including percentage labels for each disposition segment.
     """
     # Display metrics for Manual Dial calls
-    display_disposition_metrics_call_type(campaign_data)
+    display_disposition_metrics_call_type(campaign_data, type)
     
     # Filter data for Manual Dial
     call_data = campaign_data[campaign_data['CALL TYPE(Auto/Manual)'] == type]
