@@ -560,31 +560,59 @@ def main():
             
             call_cols = st.columns(2)
             with call_cols[0]:
-                plot_calls_by_hour(campaign_data)
+                try:
+                    plot_calls_by_hour(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
             with call_cols[1]:
-                # plot_connection_rate(campaign_data)
-                plot_unique_calls_by_hour(campaign_data)
-            plot_connection_rate(campaign_data)
+                try:
+                    # plot_connection_rate(campaign_data)
+                    plot_unique_calls_by_hour(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
+
+            try:
+                plot_connection_rate(campaign_data)
+            except Exception as e:
+                st.error(f'Error: {e}', icon="🚨")
+            
             dispo_cols = st.columns([2, 1])
             with dispo_cols[0]:
-                plot_manual_auto(campaign_data)
+                try:
+                    plot_manual_auto(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
             with dispo_cols[1]:
-                plot_call_type_distribution(campaign_data)
+                try:
+                    plot_call_type_distribution(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
     
             # plot_disposition_distribution(campaign_data)
-            plot_average_talk_time(campaign_data)
+            try:
+                plot_average_talk_time(campaign_data)
+            except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
+                
             st.header("Agent Disposition Distribution by Call Type")
             
             tabs = st.tabs(["All", "Manual Dial", "Auto Dial"])
             with tabs[0]:
-                plot_disposition_distribution(campaign_data)
+                try:
+                    plot_disposition_distribution(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
             with tabs[1]:
-                plot_agent_disposition_call_type(campaign_data)
+                try:
+                    plot_agent_disposition_call_type(campaign_data)
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
             with tabs[2]:
-                plot_agent_disposition_call_type(campaign_data, "Auto Dial")
+                try:
+                    plot_agent_disposition_call_type(campaign_data, "Auto Dial")
+                except Exception as e:
+                    st.error(f'Error: {e}', icon="🚨")
 
-            
-    
             total_calls = campaign_data['dialled_phone'].count()
             total_unique_accounts = campaign_data['dialled_phone'].nunique()
             penetration_rate = total_calls / total_unique_accounts if total_unique_accounts > 0 else 0
